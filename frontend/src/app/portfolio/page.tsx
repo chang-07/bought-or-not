@@ -22,6 +22,7 @@ export default function PortfolioPage() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [sellState, setSellState] = useState<{ symbol: string | null, status: string }>({ symbol: null, status: 'idle' });
+    const [manageLoading, setManageLoading] = useState(false);
 
     useEffect(() => {
         fetchPortfolio();
@@ -101,6 +102,26 @@ export default function PortfolioPage() {
         }
     };
 
+    const handleManageBrokerages = async () => {
+        setManageLoading(true);
+        try {
+            const baseURL = '';
+            const res = await axios.post(`${baseURL}/api/snaptrade/connect`, {}, {
+                withCredentials: true
+            });
+            if (res.data.redirect_url) {
+                window.location.href = res.data.redirect_url;
+            } else {
+                alert(res.data.error || 'Failed to generate portal.');
+                setManageLoading(false);
+            }
+        } catch (err) {
+            console.error(err);
+            alert('Failed to reach server.');
+            setManageLoading(false);
+        }
+    };
+
     if (loading) {
         return (
             <div className="min-h-screen bg-[#09090b] flex justify-center items-center">
@@ -125,12 +146,23 @@ export default function PortfolioPage() {
             <div className="fixed top-[-10%] left-[50%] -translate-x-1/2 w-[800px] h-[500px] rounded-full bg-blue-600/5 blur-[150px] pointer-events-none" />
 
             <div className="max-w-4xl mx-auto mb-10 relative z-10 pt-6">
-                <header className="mb-10">
-                    <h1 className="text-3xl font-bold flex items-center gap-3">
-                        <Briefcase className="w-8 h-8 text-blue-500" />
-                        My Portfolio
-                    </h1>
-                    <p className="text-gray-400 text-sm mt-1">Manage your SnapTrade synced holdings and close out copied pitches.</p>
+                <header className="mb-10 flex justify-between items-start">
+                    <div>
+                        <h1 className="text-3xl font-bold flex items-center gap-3">
+                            <Briefcase className="w-8 h-8 text-blue-500" />
+                            My Portfolio
+                        </h1>
+                        <p className="text-gray-400 text-sm mt-1">Manage your SnapTrade synced holdings and close out copied pitches.</p>
+                    </div>
+                    <button
+                        onClick={handleManageBrokerages}
+                        disabled={manageLoading}
+                        className="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-5 rounded-full transition-colors flex items-center shadow-lg shadow-blue-500/20 disabled:opacity-50"
+                    >
+                        {manageLoading ? (
+                            <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                        ) : 'Manage Brokerages'}
+                    </button>
                 </header>
 
                 <main className="space-y-8">

@@ -2,6 +2,8 @@ import type { Metadata } from 'next';
 import { Outfit } from 'next/font/google';
 import './globals.css';
 
+import TopNav from '@/components/TopNav';
+
 const outfit = Outfit({
   subsets: ['latin'],
   variable: '--font-outfit',
@@ -21,6 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${outfit.variable} font-sans antialiased selection:bg-primary/30 min-h-screen bg-background text-foreground`}>
+        <TopNav />
         {children}
       </body>
     </html>
