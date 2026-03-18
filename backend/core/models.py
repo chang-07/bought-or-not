@@ -21,7 +21,7 @@ class Pitch(models.Model):
 
     author = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='pitches')
     ticker = models.CharField(max_length=10)
-    entry_price = models.DecimalField(max_digits=10, decimal_places=4)
+    entry_price = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True)
     target_price = models.DecimalField(max_digits=10, decimal_places=4)
     is_verified = models.BooleanField(default=False)
     content_body = models.TextField()
