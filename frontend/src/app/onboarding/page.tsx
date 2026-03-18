@@ -15,7 +15,7 @@ export default function OnboardingPage() {
         setError('');
 
         try {
-            const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const baseURL = '';
             const res = await axios.post(`${baseURL}/api/snaptrade/connect`, {}, {
                 withCredentials: true, // Needs session cookies for Django Auth
             });

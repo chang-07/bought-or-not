@@ -26,7 +26,7 @@ export default function AuthPage() {
 
     try {
       const endpoint = isLogin ? '/api/login' : '/api/signup';
-      const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+      const baseURL = '';
 
       const res = await axios.post(`${baseURL}${endpoint}`, formData, {
         headers: { 'Content-Type': 'application/json' },

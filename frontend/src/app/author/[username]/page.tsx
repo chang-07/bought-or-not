@@ -32,7 +32,7 @@ export default function AuthorProfilePage() {
     useEffect(() => {
         const fetchProfile = async () => {
             try {
-                const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+                const baseURL = '';
                 const res = await axios.get(`${baseURL}/api/author/${username}`, {
                     withCredentials: true
                 });

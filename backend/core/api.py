@@ -66,7 +66,7 @@ def snaptrade_connect(request):
     
     # Register user with SnapTrade if not already done
     if not profile.snaptrade_secret:
-        user_id = str(profile.user.username) + "-" + str(uuid.uuid4())[:8]
+        user_id = str(uuid.uuid4())
         try:
             response = snaptrade.authentication.register_snap_trade_user(
                 user_id=user_id

@@ -23,12 +23,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-(eeuy_vio)v%#1nz&32@5j3o-+n5mmk0a4&y$+_eq_$ry(sx59'
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-(eeuy_vio)v%#1nz&32@5j3o-+n5mmk0a4&y$+_eq_$ry(sx59')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DJANGO_DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [host.strip() for host in os.getenv('DJANGO_ALLOWED_HOSTS', '*').split(',')]
 
 
 # Application definition
@@ -126,7 +126,10 @@ STATIC_URL = 'static/'
 # Default primary key field type
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-CORS_ALLOW_ALL_ORIGINS = True
+frontend_urls = [url.strip() for url in os.getenv('FRONTEND_URLS', 'http://localhost:3000,http://127.0.0.1:3000').split(',')]
+CORS_ALLOWED_ORIGINS = frontend_urls
+CORS_ALLOW_CREDENTIALS = True
+CSRF_TRUSTED_ORIGINS = frontend_urls
 
 # Celery Configuration
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')

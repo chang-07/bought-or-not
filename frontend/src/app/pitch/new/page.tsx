@@ -33,7 +33,7 @@ export default function NewPitchPage() {
         }
 
         try {
-            const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const baseURL = '';
 
             const payload = new FormData();
             payload.append("payload", JSON.stringify({

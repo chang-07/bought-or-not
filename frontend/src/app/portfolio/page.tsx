@@ -30,7 +30,7 @@ export default function PortfolioPage() {
     const fetchPortfolio = async () => {
         setLoading(true);
         try {
-            const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const baseURL = '';
             const res = await axios.get(`${baseURL}/api/portfolio`, {
                 withCredentials: true
             });
@@ -75,7 +75,7 @@ export default function PortfolioPage() {
     const handleSell = async (accountId: string, symbol: string, units: number) => {
         setSellState({ symbol, status: 'loading' });
         try {
-            const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const baseURL = '';
             const res = await axios.post(`${baseURL}/api/trade/sell`, {
                 account_id: accountId,
                 symbol,

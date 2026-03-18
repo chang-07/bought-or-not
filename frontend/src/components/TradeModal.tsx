@@ -38,7 +38,7 @@ export default function TradeModal({ isOpen, onClose, pitchId, ticker }: TradeMo
         setError('');
 
         try {
-            const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const baseURL = '';
             const res = await axios.get(`${baseURL}/api/trade/impact/${pitchId}`, {
                 withCredentials: true
             });
@@ -62,7 +62,7 @@ export default function TradeModal({ isOpen, onClose, pitchId, ticker }: TradeMo
         setError('');
 
         try {
-            const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const baseURL = '';
             const res = await axios.post(`${baseURL}/api/trade/execute/${pitchId}`, {
                 account_id: accountId,
                 units: units

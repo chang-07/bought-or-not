@@ -30,7 +30,7 @@ export default function DashboardPage() {
     const fetchPitches = async (query = '') => {
         setLoading(true);
         try {
-            const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+            const baseURL = '';
             const res = await axios.get(`${baseURL}/api/pitches${query ? `?search=${query}` : ''}`, {
                 withCredentials: true
             });
