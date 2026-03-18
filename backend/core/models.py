@@ -23,6 +23,8 @@ class Pitch(models.Model):
     ticker = models.CharField(max_length=10)
     entry_price = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True)
     target_price = models.DecimalField(max_digits=10, decimal_places=4)
+    spy_entry_price = models.DecimalField(max_digits=10, decimal_places=4, null=True, blank=True)
+    current_alpha = models.DecimalField(max_digits=10, decimal_places=4, default=0.0)
     is_verified = models.BooleanField(default=False)
     content_body = models.TextField()
     status = models.CharField(max_length=15, choices=STATUS_CHOICES, default='ACTIVE')

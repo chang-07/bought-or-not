@@ -136,3 +136,40 @@ def create_pitch(request, payload: PitchCreateSchema, deck: UploadedFile = File(
 
     return {"success": True, "pitch_id": pitch.id}
 
+class PitchResponseSchema(Schema):
+    id: int
+    ticker: str
+    author_username: str
+    target_price: float
+    entry_price: float | None
+    current_alpha: float
+    status: str
+    content_body: str
+    deck_url: str | None
+
+@router.get("/pitches", response=list[PitchResponseSchema])
+def get_pitches(request, search: str = None):
+    pitches = Pitch.objects.filter(status='ACTIVE', is_verified=True).order_by('-created_at')
+    
+    if search:
+        pitches = pitches.filter(ticker__icontains=search) | pitches.filter(author__user__username__icontains=search)
+        
+    response_data = []
+    for p in pitches:
+        attachment = p.attachments.first()
+        deck_url = attachment.file_url if attachment else None
+        
+        response_data.append({
+            "id": p.id,
+            "ticker": p.ticker,
+            "author_username": p.author.user.username,
+            "target_price": float(p.target_price),
+            "entry_price": float(p.entry_price) if p.entry_price else None,
+            "current_alpha": float(p.current_alpha),
+            "status": p.status,
+            "content_body": p.content_body,
+            "deck_url": deck_url
+        })
+        
+    return response_data
+
