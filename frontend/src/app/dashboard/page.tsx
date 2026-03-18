@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, TrendingUp, TrendingDown, Eye, ExternalLink, ShieldCheck, Clock } from 'lucide-react';
 import axios from 'axios';
+import TradeModal from '@/components/TradeModal';
 
 type Pitch = {
     id: number;
@@ -21,6 +22,10 @@ export default function DashboardPage() {
     const [pitches, setPitches] = useState<Pitch[]>([]);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
+
+    // Modal State
+    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [selectedPitch, setSelectedPitch] = useState<{ id: number, ticker: string } | null>(null);
 
     const fetchPitches = async (query = '') => {
         setLoading(true);
@@ -146,7 +151,13 @@ export default function DashboardPage() {
                                             )}
                                         </div>
 
-                                        <button className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium py-2 px-5 rounded-xl shadow-lg transition-all active:scale-[0.98]">
+                                        <button
+                                            onClick={() => {
+                                                setSelectedPitch({ id: pitch.id, ticker: pitch.ticker });
+                                                setIsModalOpen(true);
+                                            }}
+                                            className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium py-2 px-5 rounded-xl shadow-lg transition-all active:scale-[0.98]"
+                                        >
                                             1-Click Trade
                                             <ExternalLink className="w-4 h-4" />
                                         </button>
@@ -157,6 +168,17 @@ export default function DashboardPage() {
                     )}
                 </AnimatePresence>
             </main>
+
+            {/* Trade Execution Modal */}
+            <TradeModal
+                isOpen={isModalOpen}
+                onClose={() => {
+                    setIsModalOpen(false);
+                    setSelectedPitch(null);
+                }}
+                pitchId={selectedPitch?.id || null}
+                ticker={selectedPitch?.ticker || ''}
+            />
         </div>
     );
 }
