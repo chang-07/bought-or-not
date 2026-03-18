@@ -173,3 +173,289 @@ def get_pitches(request, search: str = None):
         
     return response_data
 
+@router.get("/trade/impact/{pitch_id}")
+def get_pre_trade_impact(request, pitch_id: int):
+    if not request.user.is_authenticated:
+        return {"error": "Not authenticated"}
+
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+        if not profile.snaptrade_secret or not profile.snaptrade_user_id:
+             return {"error": "SnapTrade account not connected"}
+
+        pitch = Pitch.objects.get(id=pitch_id)
+
+        import datetime
+        from pytz import timezone
+        import pytz
+
+        eastern = timezone('US/Eastern')
+        now = datetime.datetime.now(eastern)
+        is_market_open = True
+        if now.weekday() >= 5: # Saturday or Sunday
+            is_market_open = False
+        elif now.time() < datetime.time(9, 30) or now.time() > datetime.time(16, 0):
+            is_market_open = False
+
+        # 1. Get Accounts
+        accounts_res = snaptrade.account_information.list_user_accounts(
+            user_id=str(profile.snaptrade_user_id),
+            user_secret=profile.snaptrade_secret
+        )
+        accounts = accounts_res.body if hasattr(accounts_res, 'body') else accounts_res
+        if not accounts:
+             return {"error": "No brokerage accounts found"}
+        
+        # Use first account directly for 1-Click simplicity
+        account = accounts[0]
+        account_id = account.get('id') if isinstance(account, dict) else account.id
+
+        # 2. Search Symbol within Account
+        search_res = snaptrade.reference_data.symbol_search_user_account(
+            user_id=str(profile.snaptrade_user_id),
+            user_secret=profile.snaptrade_secret,
+            account_id=account_id,
+            query=pitch.ticker
+        )
+        search_data = search_res.body if hasattr(search_res, 'body') else search_res
+        if not search_data:
+             return {"error": f"Symbol {pitch.ticker} not tradable on this brokerage"}
+             
+        symbol_obj = search_data[0]
+        symbol_id = symbol_obj.get('id') if isinstance(symbol_obj, dict) else symbol_obj.id
+
+        # 3. Get Order Impact
+        from snaptrade_client import ManualTradeForm # type: ignore
+        order_form = ManualTradeForm(
+             account_id=account_id,
+             action="BUY",
+             order_type="Market",
+             time_in_force="FOK", # Fill Or Kill
+             universal_symbol_id=symbol_id,
+             units=1 # Default 1 share for impact calculation
+        )
+
+        impact_res = snaptrade.trading.get_order_impact(
+            user_id=str(profile.snaptrade_user_id),
+            user_secret=profile.snaptrade_secret,
+            manual_trade_form=order_form
+        )
+        
+        impact = impact_res.body if hasattr(impact_res, 'body') else impact_res
+        return {
+            "success": True, 
+            "impact": impact, 
+            "account": {"id": account_id},
+            "is_market_open": is_market_open
+        }
+
+    except Pitch.DoesNotExist:
+        return {"error": "Pitch not found"}
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
+class ExecuteTradeSchema(Schema):
+    account_id: str
+    units: float = 1.0
+
+@router.post("/trade/execute/{pitch_id}")
+def execute_trade(request, pitch_id: int, payload: ExecuteTradeSchema):
+    if not request.user.is_authenticated:
+        return {"error": "Not authenticated"}
+
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+        if not profile.snaptrade_secret or not profile.snaptrade_user_id:
+             return {"error": "SnapTrade account not connected"}
+
+        pitch = Pitch.objects.get(id=pitch_id)
+
+        search_res = snaptrade.reference_data.symbol_search_user_account(
+            user_id=str(profile.snaptrade_user_id),
+            user_secret=profile.snaptrade_secret,
+            account_id=payload.account_id,
+            query=pitch.ticker
+        )
+        search_data = search_res.body if hasattr(search_res, 'body') else search_res
+        if not search_data:
+             return {"error": f"Symbol {pitch.ticker} not tradable on this brokerage"}
+             
+        symbol_obj = search_data[0]
+        symbol_id = symbol_obj.get('id') if isinstance(symbol_obj, dict) else symbol_obj.id
+
+        from snaptrade_client import ManualTradeForm # type: ignore
+        order_form = ManualTradeForm(
+             account_id=payload.account_id,
+             action="BUY",
+             order_type="Market",
+             time_in_force="Day", # "Day" is standard for queued Alpaca/general Market orders
+             universal_symbol_id=symbol_id,
+             units=payload.units
+        )
+
+        place_res = snaptrade.trading.place_order(
+             user_id=str(profile.snaptrade_user_id),
+             user_secret=profile.snaptrade_secret,
+             trade_id=str(uuid.uuid4()), # Need a unique trade ID for idempotent request (might not be strict on python sdk)
+             manual_trade_form=order_form
+        )
+
+        place_data = place_res.body if hasattr(place_res, 'body') else place_res
+
+        from .models import TradeEvent
+        TradeEvent.objects.create(
+            user=profile,
+            pitch=pitch,
+            snaptrade_order_id=str(place_data.get('order_id', place_data.get('id', 'unknown'))),
+            shares_executed=payload.units,
+            execution_price=0.0 # Will be populated by webhook later in prod
+        )
+        
+        return {"success": True, "order": place_data}
+
+    except Pitch.DoesNotExist:
+        return {"error": "Pitch not found"}
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
+@router.get("/author/{username}")
+def get_author_profile(request, username: str):
+    from django.contrib.auth.models import User
+    from django.db import models
+    from .models import Pitch, TradeEvent
+
+    try:
+        user = User.objects.get(username=username)
+        
+        pitches = Pitch.objects.filter(author=user).order_by('-created_at')
+        
+        total_aum = TradeEvent.objects.filter(pitch__author=user, execution_price__gt=0).aggregate(
+            total=models.Sum(models.F('shares_executed') * models.F('execution_price'))
+        )['total'] or 0.0
+
+        win_count = pitches.filter(current_alpha__gt=0).count()
+        total_pitches = pitches.count()
+        win_rate = (win_count / total_pitches) * 100 if total_pitches > 0 else 0.0
+        
+        avg_alpha = pitches.aggregate(avg=models.Avg('current_alpha'))['avg'] or 0.0
+
+        return {
+            "author": {
+                "username": user.username,
+                "total_aum": float(total_aum),
+                "win_rate": float(win_rate),
+                "avg_alpha": float(avg_alpha),
+                "total_pitches": total_pitches
+            },
+            "pitches": [
+                {
+                    "id": p.id,
+                    "ticker": p.ticker,
+                    "target_price": float(p.target_price),
+                    "entry_price": float(p.entry_price) if p.entry_price else None,
+                    "current_alpha": float(p.current_alpha),
+                    "status": p.status,
+                    "created_at": p.created_at.isoformat()
+                } for p in pitches
+            ]
+        }
+    except User.DoesNotExist:
+        return {"error": "Author not found"}
+
+@router.get("/portfolio")
+def get_portfolio(request):
+    if not request.user.is_authenticated:
+        return {"error": "Not authenticated"}
+    
+    profile = UserProfile.objects.get(user=request.user)
+    if not profile.snaptrade_secret or not profile.snaptrade_user_id:
+        return {"error": "SnapTrade account not connected"}
+    
+    try:
+        accounts_res = snaptrade.account_information.list_user_accounts(
+            user_id=str(profile.snaptrade_user_id),
+            user_secret=profile.snaptrade_secret
+        )
+        accounts = accounts_res.body if hasattr(accounts_res, 'body') else accounts_res
+        if not accounts:
+            return {"error": "No brokerage accounts found"}
+        
+        portfolio = []
+        for account in accounts:
+            acc_id = account.get('id') if isinstance(account, dict) else account.id
+            acc_name = account.get('name') if isinstance(account, dict) else account.name
+            
+            holdings_res = snaptrade.account_information.get_user_holdings(
+                user_id=str(profile.snaptrade_user_id),
+                user_secret=profile.snaptrade_secret,
+                account_id=acc_id
+            )
+            
+            holdings = holdings_res.body if hasattr(holdings_res, 'body') else holdings_res
+            portfolio.append({
+                "account_id": acc_id,
+                "account_name": acc_name,
+                "holdings": holdings
+            })
+            
+        return {"success": True, "portfolio": portfolio}
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
+class SellTradeSchema(Schema):
+    account_id: str
+    symbol: str
+    units: float
+
+@router.post("/trade/sell")
+def sell_trade(request, payload: SellTradeSchema):
+    if not request.user.is_authenticated:
+        return {"error": "Not authenticated"}
+
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+        if not profile.snaptrade_secret or not profile.snaptrade_user_id:
+             return {"error": "SnapTrade account not connected"}
+
+        search_res = snaptrade.reference_data.symbol_search_user_account(
+            user_id=str(profile.snaptrade_user_id),
+            user_secret=profile.snaptrade_secret,
+            account_id=payload.account_id,
+            query=payload.symbol
+        )
+        search_data = search_res.body if hasattr(search_res, 'body') else search_res
+        if not search_data:
+             return {"error": f"Symbol {payload.symbol} not tradable on this brokerage"}
+             
+        symbol_obj = search_data[0]
+        symbol_id = symbol_obj.get('id') if isinstance(symbol_obj, dict) else symbol_obj.id
+
+        from snaptrade_client import ManualTradeForm # type: ignore
+        order_form = ManualTradeForm(
+             account_id=payload.account_id,
+             action="SELL",
+             order_type="Market",
+             time_in_force="Day",
+             universal_symbol_id=symbol_id,
+             units=payload.units
+        )
+
+        place_res = snaptrade.trading.place_order(
+             user_id=str(profile.snaptrade_user_id),
+             user_secret=profile.snaptrade_secret,
+             trade_id=str(uuid.uuid4()),
+             manual_trade_form=order_form
+        )
+
+        place_data = place_res.body if hasattr(place_res, 'body') else place_res
+        return {"success": True, "order": place_data}
+
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
