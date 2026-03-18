@@ -1,7 +1,9 @@
-from ninja import Router
+from ninja import Router, Schema, File
+from ninja.files import UploadedFile
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.contrib.auth.models import User
-from .models import UserProfile
+from .models import UserProfile, Pitch, PitchAttachment
+from .tasks import verify_pitch_holdings
 from ninja import Schema
 import os
 import uuid
@@ -94,3 +96,80 @@ def snaptrade_connect(request):
             return {"redirect_url": redirect_res.redirect_uri}
     except Exception as e:
         return {"error": str(e)}
+
+class PitchCreateSchema(Schema):
+    ticker: str
+    target_price: float
+    content_body: str
+
+@router.post("/pitches")
+def create_pitch(request, payload: PitchCreateSchema, deck: UploadedFile = File(None)):
+    if not request.user.is_authenticated:
+        return {"error": "Not authenticated"}
+
+    profile = UserProfile.objects.get(user=request.user)
+
+    # Create the unverified Pitch
+    pitch = Pitch.objects.create(
+        author=profile,
+        ticker=payload.ticker.upper(),
+        target_price=payload.target_price,
+        content_body=payload.content_body,
+        status='ACTIVE',
+        is_verified=False
+    )
+
+    # Handle file upload if present
+    if deck:
+        from django.core.files.storage import default_storage
+        file_path = default_storage.save(f"pitches/{pitch.id}/{deck.name}", deck)
+        file_url = default_storage.url(file_path)
+        
+        PitchAttachment.objects.create(
+            pitch=pitch,
+            file_url=file_url,
+            file_type=deck.content_type
+        )
+
+    # Trigger Async Celery Task for Verification
+    verify_pitch_holdings.delay(pitch.id)
+
+    return {"success": True, "pitch_id": pitch.id}
+
+class PitchResponseSchema(Schema):
+    id: int
+    ticker: str
+    author_username: str
+    target_price: float
+    entry_price: float | None
+    current_alpha: float
+    status: str
+    content_body: str
+    deck_url: str | None
+
+@router.get("/pitches", response=list[PitchResponseSchema])
+def get_pitches(request, search: str = None):
+    pitches = Pitch.objects.filter(status='ACTIVE', is_verified=True).order_by('-created_at')
+    
+    if search:
+        pitches = pitches.filter(ticker__icontains=search) | pitches.filter(author__user__username__icontains=search)
+        
+    response_data = []
+    for p in pitches:
+        attachment = p.attachments.first()
+        deck_url = attachment.file_url if attachment else None
+        
+        response_data.append({
+            "id": p.id,
+            "ticker": p.ticker,
+            "author_username": p.author.user.username,
+            "target_price": float(p.target_price),
+            "entry_price": float(p.entry_price) if p.entry_price else None,
+            "current_alpha": float(p.current_alpha),
+            "status": p.status,
+            "content_body": p.content_body,
+            "deck_url": deck_url
+        })
+        
+    return response_data
+
