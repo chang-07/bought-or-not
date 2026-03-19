@@ -1,6 +1,5 @@
-# VSPP — Virtual Stock Pitch Platform (Bought or Not)
-
-VSPP is a high-performance, tactical stock pitching and portfolio tracking environment designed for institutional-grade visual clarity and split-second decision making. It bridges the gap between static stock slidedecks and live brokerage execution.
+# Bought-or-Not
+Bought-or-Not is a high-performance, tactical stock pitching and portfolio tracking environment designed for institutional-grade visual clarity and split-second decision making. It bridges the gap between static stock slidedecks and live brokerage execution.
 
 ## ⚡ Key Features
 
@@ -24,7 +23,7 @@ VSPP is a high-performance, tactical stock pitching and portfolio tracking envir
 
 ## 🏗️ System Design & Architecture
 
-VSPP uses a modern decoupled architecture designed for high availability and low latency during market hours.
+Bought-or-Not uses a modern decoupled architecture designed for high availability and low latency during market hours.
 
 ### 🔄 Data Flow Architecture
 ```mermaid
