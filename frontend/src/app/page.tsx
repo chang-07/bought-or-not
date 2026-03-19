@@ -89,7 +89,7 @@ export default function AuthPage() {
             <TrendingUp className="w-10 h-10 text-black" strokeWidth={3} />
           </motion.div>
           <h1 className="text-4xl font-black tracking-tighter text-white mb-2 italic">
-            VSPP
+            Bought-or-Not
           </h1>
           <p className="text-gray-400 font-medium tracking-wide uppercase text-xs">Verified Social Pitch Platform</p>
         </motion.div>

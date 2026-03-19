@@ -47,7 +47,7 @@ export default function OnboardingPage() {
 
                     <h1 className="text-3xl font-black uppercase italic tracking-tighter mb-4 text-white">Initialize Node</h1>
                     <p className="text-gray-500 mb-10 text-[10px] font-black uppercase tracking-widest leading-relaxed">
-                        To publish verified intel or execute copy trades, VSPP requires a secure linkage to your exchange protocol.
+                        To publish verified intel or execute copy trades, Bought-or-Not requires a secure linkage to your exchange protocol.
                     </p>
 
                     {error && (

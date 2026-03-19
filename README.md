@@ -1,4 +1,5 @@
 # Bought-or-Not
+
 Bought-or-Not is a high-performance, tactical stock pitching and portfolio tracking environment designed for institutional-grade visual clarity and split-second decision making. It bridges the gap between static stock slidedecks and live brokerage execution.
 
 ## ⚡ Key Features
@@ -111,5 +112,5 @@ celery -A vspp beat -l info
 ---
 
 ## 🛡️ Security Protocol
-- **Brokerage Isolation**: Trading is handled via SnapTrade's secure connection portal. No credentials touch VSPP servers.
+- **Brokerage Isolation**: Trading is handled via SnapTrade's secure connection portal. No credentials touch Bought-or-Not servers.
 - **Session Management**: Secure HttpOnly cookies with CSRF protection.

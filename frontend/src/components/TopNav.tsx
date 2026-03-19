@@ -42,7 +42,7 @@ export default function TopNav() {
             </motion.div>
             <div className="flex flex-col -space-y-1">
               <span className="font-black text-2xl italic tracking-tighter text-white group-hover:text-yellow-400 transition-colors uppercase">
-                VSPP
+                Bought-or-Not
               </span>
               <span className="text-[8px] font-black tracking-[0.4em] text-gray-600 uppercase">Deployed v3.4</span>
             </div>

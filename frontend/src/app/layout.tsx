@@ -11,7 +11,7 @@ const outfit = Outfit({
 });
 
 export const metadata: Metadata = {
-  title: 'VSPP | Verified Social Pitch Platform',
+  title: 'Bought-or-Not | Verified Social Pitch Platform',
   description: 'Copy-trade the best equity researchers with verified skin in the game.',
 };
 

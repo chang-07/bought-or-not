@@ -1,6 +1,6 @@
 from ninja import NinjaAPI
 
-api = NinjaAPI(title="VSPP API", version="1.0.0")
+api = NinjaAPI(title="Bought-or-Not API", version="1.0.0")
 
 api.add_router("", "core.api.router")
 

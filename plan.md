@@ -1,8 +1,8 @@
-# Project Plan: Verified Social Pitch Platform (VSPP)
+# Project Plan: Verified Social Pitch Platform (Bought-or-Not)
 
 ## 1. Executive Summary
 
-VSPP is a professional social network for equity research and trade execution. It solves the "signal vs. noise" problem in retail investing by requiring authors to verify their "Skin in the Game" via SnapTrade before a pitch is published. Users can scroll through pitches, view verified P&L performance, and execute trades directly within the platform.
+Bought-or-Not is a professional social network for equity research and trade execution. It solves the "signal vs. noise" problem in retail investing by requiring authors to verify their "Skin in the Game" via SnapTrade before a pitch is published. Users can scroll through pitches, view verified P&L performance, and execute trades directly within the platform.
 
 ---
 
