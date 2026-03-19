@@ -93,10 +93,6 @@ export default function TopNav() {
               );
             })}
             
-            <div className="ml-4 pl-4 border-l border-white/5 flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-              <span className="text-[8px] font-black text-gray-700 uppercase tracking-widest hidden lg:block">Systems Online</span>
-            </div>
           </div>
         </div>
       </div>

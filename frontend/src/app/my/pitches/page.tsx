@@ -17,7 +17,9 @@ import {
   ChevronRight,
 } from "lucide-react";
 import axios from "axios";
-import PdfThumbnail from "@/components/PdfThumbnail";
+import dynamic from "next/dynamic";
+
+const PdfThumbnail = dynamic(() => import("@/components/PdfThumbnail"), { ssr: false });
 
 type MyPitch = {
   id: number;

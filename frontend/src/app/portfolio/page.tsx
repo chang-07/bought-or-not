@@ -18,6 +18,23 @@ import {
   ExternalLink,
 } from "lucide-react";
 import axios from "axios";
+import dynamic from "next/dynamic";
+
+const PortfolioCharts = dynamic(() => import("@/components/PortfolioCharts"), {
+  ssr: false,
+  loading: () => (
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {[1, 2, 3].map((i) => (
+        <div
+          key={i}
+          className={`bg-[#111114] border border-white/5 rounded-[2rem] p-8 h-[360px] animate-pulse ${
+            i === 1 ? "lg:col-span-2" : ""
+          }`}
+        />
+      ))}
+    </div>
+  ),
+});
 
 type Position = {
   ticker: string;
@@ -273,6 +290,15 @@ export default function PortfolioPage() {
             icon={<Wallet />}
           />
         </section>
+
+        {/* ---- Analytics Charts ---- */}
+        {accounts.length > 0 && (
+          <PortfolioCharts
+            positions={accounts.flatMap((a) => a.positions)}
+            totalMarketValue={totals.totalMarketValue}
+            totalCash={totals.totalCash}
+          />
+        )}
 
         <main className="space-y-12 pb-20">
           {accounts.length === 0 ? (

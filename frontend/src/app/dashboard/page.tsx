@@ -11,6 +11,7 @@ import {
   Clock,
   X,
   DollarSign,
+  RefreshCw,
 } from "lucide-react";
 import axios from "axios";
 import TradeModal from "@/components/TradeModal";
@@ -81,6 +82,19 @@ export default function DashboardPage() {
     }
   };
 
+  const [refreshing, setRefreshing] = useState(false);
+  const refreshAlpha = async () => {
+    setRefreshing(true);
+    try {
+      await axios.post('/api/alpha/refresh', {}, { withCredentials: true });
+      await fetchPitches(search);
+    } catch (err) {
+      console.error('Failed to refresh alpha', err);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   useEffect(() => {
     fetchPitches();
   }, []);
@@ -92,7 +106,7 @@ export default function DashboardPage() {
 
   return (
     <div className="min-h-screen p-6 relative">
-      <header className="max-w-4xl mx-auto mb-12 flex flex-col md:flex-row md:items-end justify-between relative z-10 pt-10 gap-6">
+      <header className="max-w-7xl mx-auto mb-12 flex flex-col md:flex-row md:items-end justify-between relative z-10 pt-10 gap-6">
         <div>
           <motion.div 
             initial={{ opacity: 0, x: -20 }}
@@ -124,9 +138,22 @@ export default function DashboardPage() {
             className="w-full bg-black/60 border border-white/10 rounded-2xl py-3.5 pl-11 pr-4 text-xs font-bold tracking-widest focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all text-white placeholder:text-gray-600 uppercase"
           />
         </motion.form>
-      </header>
 
-      <main className="max-w-4xl mx-auto space-y-8 relative z-10 pb-24">
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            whileHover={{ scale: 1.1, rotate: 180 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={refreshAlpha}
+            disabled={refreshing}
+            className="p-3 rounded-xl border border-white/10 hover:border-yellow-400/30 hover:bg-yellow-400/5 transition-all disabled:opacity-50 group"
+            title="Refresh alpha scores via Finnhub"
+          >
+            <RefreshCw className={`w-4 h-4 text-gray-500 group-hover:text-yellow-400 transition-colors ${refreshing ? 'animate-spin' : ''}`} />
+          </motion.button>
+        </header>
+
+      <main className="max-w-7xl mx-auto space-y-8 relative z-10 pb-24">
         <AnimatePresence mode="popLayout">
           {loading ? (
             <motion.div

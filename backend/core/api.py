@@ -6,7 +6,7 @@ from ninja.files import UploadedFile
 from django.contrib.auth import authenticate, login as django_login, logout as django_logout
 from django.contrib.auth.models import User
 from .models import UserProfile, Pitch, PitchAttachment
-from .tasks import verify_pitch_holdings
+from .tasks import verify_pitch_holdings, update_alpha_scores
 import os
 import uuid
 from snaptrade_client import SnapTrade  # type: ignore
@@ -737,6 +737,120 @@ def sell_trade(request, payload: SellTradeSchema):
 
         order_id = str(place_raw.get('brokerage_order_id') or place_raw.get('id') or 'unknown')
         return {"success": True, "order_id": order_id}
+
+    except Exception as e:
+        import traceback
+        return {"error": str(e), "trace": traceback.format_exc()}
+
+
+# ---------------------------------------------------------------------------
+# Alpha refresh (manual trigger)
+# ---------------------------------------------------------------------------
+
+@router.post("/alpha/refresh")
+def refresh_alpha(request):
+    """Run a synchronous Finnhub alpha update for all active verified pitches."""
+    if not request.user.is_authenticated:
+        return {"error": "Not authenticated"}
+
+    try:
+        update_alpha_scores()
+        return {"success": True, "message": "Alpha scores refreshed via Finnhub"}
+    except Exception as e:
+        return {"error": str(e)}
+
+
+# ---------------------------------------------------------------------------
+# Portfolio history (for charts)
+# ---------------------------------------------------------------------------
+
+@router.get("/portfolio/history")
+def get_portfolio_history(request):
+    """Fetch portfolio activities and return-rate history from SnapTrade."""
+    if not request.user.is_authenticated:
+        return {"error": "Not authenticated"}
+
+    profile = UserProfile.objects.get(user=request.user)
+    if not profile.snaptrade_secret or not profile.snaptrade_user_id:
+        return {"error": "SnapTrade account not connected"}
+
+    user_id = str(profile.snaptrade_user_id)
+    user_secret = profile.snaptrade_secret
+
+    try:
+        accounts_raw = sdk_to_python(
+            snaptrade.account_information.list_user_accounts(
+                user_id=user_id,
+                user_secret=user_secret,
+            ).body
+        )
+        if not accounts_raw:
+            return {"success": True, "return_rates": [], "activities": []}
+
+        all_return_rates = []
+        all_activities = []
+
+        for account in accounts_raw:
+            acc_id = str(account['id'])
+
+            # --- Return rates (performance timeline) ---
+            try:
+                rates_raw = sdk_to_python(
+                    snaptrade.account_information.get_user_account_return_rates(
+                        user_id=user_id,
+                        user_secret=user_secret,
+                        account_id=acc_id,
+                    ).body
+                )
+                if rates_raw and isinstance(rates_raw, dict):
+                    # rates_raw has keys like 'data' containing time-series
+                    data_points = rates_raw.get('data') or rates_raw.get('timeWeightedReturn') or []
+                    if isinstance(data_points, list):
+                        for dp in data_points:
+                            all_return_rates.append({
+                                "date": str(dp.get('date') or dp.get('period_start') or ''),
+                                "return_pct": float(dp.get('return') or dp.get('return_pct') or dp.get('value') or 0),
+                                "account_id": acc_id,
+                            })
+                    elif isinstance(data_points, dict):
+                        # Single-value structure
+                        all_return_rates.append({
+                            "date": str(data_points.get('date') or ''),
+                            "return_pct": float(data_points.get('return') or 0),
+                            "account_id": acc_id,
+                        })
+            except Exception as e:
+                print(f"Return rates unavailable for {acc_id}: {e}")
+
+            # --- Activities (transaction history) ---
+            try:
+                activities_raw = sdk_to_python(
+                    snaptrade.transactions_and_reporting.get_activities(
+                        user_id=user_id,
+                        user_secret=user_secret,
+                        account_id=acc_id,
+                    ).body
+                )
+                if activities_raw and isinstance(activities_raw, list):
+                    for act in activities_raw[:50]:  # Limit to recent 50
+                        all_activities.append({
+                            "date": str(act.get('trade_date') or act.get('settlement_date') or ''),
+                            "type": str(act.get('type') or ''),
+                            "description": str(act.get('description') or ''),
+                            "symbol": str((act.get('symbol') or {}).get('symbol') or act.get('ticker') or ''),
+                            "amount": float(act.get('amount') or 0),
+                            "units": float(act.get('units') or act.get('quantity') or 0),
+                            "price": float(act.get('price') or 0),
+                            "account_id": acc_id,
+                        })
+            except Exception as e:
+                print(f"Activities unavailable for {acc_id}: {e}")
+
+        return {
+            "success": True,
+            "return_rates": all_return_rates,
+            "activities": all_activities,
+        }
 
     except Exception as e:
         import traceback
