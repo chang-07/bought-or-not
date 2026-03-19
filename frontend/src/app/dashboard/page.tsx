@@ -6,13 +6,15 @@ import {
   Search,
   TrendingUp,
   TrendingDown,
-  Eye,
   ExternalLink,
   ShieldCheck,
   Clock,
 } from "lucide-react";
 import axios from "axios";
 import TradeModal from "@/components/TradeModal";
+import dynamic from 'next/dynamic';
+
+const PdfThumbnail = dynamic(() => import("@/components/PdfThumbnail"), { ssr: false });
 
 type Pitch = {
   id: number;
@@ -24,6 +26,7 @@ type Pitch = {
   status: string;
   content_body: string;
   deck_url: string | null;
+  is_verified?: boolean;
 };
 
 export default function DashboardPage() {
@@ -169,34 +172,26 @@ export default function DashboardPage() {
                     {pitch.content_body}
                   </p>
 
-                  <div className="flex items-center justify-between pt-4 border-t border-white/10">
-                    <div className="flex gap-3">
-                      {pitch.deck_url && (
-                        <a
-                          href={pitch.deck_url}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="flex items-center gap-2 text-sm text-gray-400 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg"
-                        >
-                          <Eye className="w-4 h-4" />
-                          View Deck
-                        </a>
-                      )}
-                    </div>
+                  <div className="pt-4 border-t border-white/10 space-y-4">
+                    {pitch.deck_url && (
+                      <PdfThumbnail url={pitch.deck_url} ticker={pitch.ticker} />
+                    )}
 
-                    <button
-                      onClick={() => {
-                        setSelectedPitch({
-                          id: pitch.id,
-                          ticker: pitch.ticker,
-                        });
-                        setIsModalOpen(true);
-                      }}
-                      className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium py-2 px-5 rounded-xl shadow-lg transition-all active:scale-[0.98]"
-                    >
-                      1-Click Trade
-                      <ExternalLink className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center justify-end">
+                      <button
+                        onClick={() => {
+                          setSelectedPitch({
+                            id: pitch.id,
+                            ticker: pitch.ticker,
+                          });
+                          setIsModalOpen(true);
+                        }}
+                        className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-medium py-2 px-5 rounded-xl shadow-lg transition-all active:scale-[0.98]"
+                      >
+                        1-Click Trade
+                        <ExternalLink className="w-4 h-4" />
+                      </button>
+                    </div>
                   </div>
                 </div>
               </motion.article>

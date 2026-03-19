@@ -571,10 +571,28 @@ def get_pitch_deck(request, pitch_id: int):
 
         from django.http import HttpResponse
 
-        content_type = str(attachment.file_type or "application/octet-stream")
-        response = HttpResponse(bytes(attachment.file_blob), content_type=content_type)
+        raw_type = str(attachment.file_type or "").lower().strip()
         filename = str(attachment.file_name or f"pitch_{pitch_id}_deck")
+
+        # Favor browser-previewable content types so embeds render inline.
+        if "pdf" in raw_type or filename.lower().endswith(".pdf"):
+            content_type = "application/pdf"
+        elif "powerpoint" in raw_type or filename.lower().endswith(".pptx"):
+            content_type = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+        elif "presentation" in raw_type or filename.lower().endswith(".ppt"):
+            content_type = "application/vnd.ms-powerpoint"
+        else:
+            content_type = "application/octet-stream"
+
+        response = HttpResponse(bytes(attachment.file_blob), content_type=content_type)
+
+        # Inline disposition prevents attachment-style auto-download in iframes.
         response["Content-Disposition"] = f'inline; filename="{filename}"'
+
+        # Prevent MIME sniffing issues and allow same-origin iframe rendering.
+        response["X-Content-Type-Options"] = "nosniff"
+        response["Cross-Origin-Resource-Policy"] = "same-origin"
+
         return response
     except Pitch.DoesNotExist:
         return {"error": "Pitch not found"}
