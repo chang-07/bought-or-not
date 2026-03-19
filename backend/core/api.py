@@ -616,16 +616,33 @@ def get_portfolio(request):
                 ).body
             )
 
+            # SnapTrade response shape can vary by brokerage/SDK version.
+            # Support multiple known structures and expose parse debug counters.
+            raw_positions = (
+                holdings_raw.get('positions')
+                or (holdings_raw.get('account') or {}).get('positions')
+                or (holdings_raw.get('holdings') or {}).get('positions')
+                or []
+            )
+
             positions = []
-            for pos in (holdings_raw.get('positions') or []):
+            for pos in raw_positions:
                 pos_symbol = pos.get('symbol') or {}
-                uni_symbol = pos_symbol.get('symbol') or {}
+
+                # Try multiple symbol paths observed across responses.
+                ticker = (
+                    ((pos_symbol.get('symbol') or {}).get('symbol'))
+                    or pos_symbol.get('ticker')
+                    or pos.get('ticker')
+                    or ''
+                )
+
                 positions.append({
-                    "ticker": str(uni_symbol.get('symbol') or ''),
+                    "ticker": str(ticker or ''),
                     "units": float(pos.get('units') or 0),
                     "price": float(pos.get('price') or 0),
-                    "average_purchase_price": float(pos.get('average_purchase_price') or 0),
-                    "open_pnl": float(pos.get('open_pnl') or 0),
+                    "average_purchase_price": float(pos.get('average_purchase_price') or pos.get('average_price') or 0),
+                    "open_pnl": float(pos.get('open_pnl') or pos.get('unrealized_pnl') or 0),
                 })
 
             balances = []
@@ -641,6 +658,10 @@ def get_portfolio(request):
                 "account_name": acc_name,
                 "positions": positions,
                 "balances": balances,
+                "debug": {
+                    "raw_positions_count": int(len(raw_positions)),
+                    "parsed_positions_count": int(len(positions)),
+                },
             })
 
         return {"success": True, "portfolio": portfolio}
