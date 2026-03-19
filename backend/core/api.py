@@ -235,7 +235,7 @@ def create_pitch(request, payload: PitchCreateSchema, deck: UploadedFile = File(
     )
 
     if deck:
-        PitchAttachment.objects.create(
+        attachment = PitchAttachment.objects.create(
             pitch=pitch,
             file_blob=deck.read(),
             file_name=str(getattr(deck, "name", "") or ""),
@@ -291,7 +291,7 @@ def get_pitches(request, search: str = None):
                 request.user.is_authenticated and p.author.user_id == request.user.id
             ),
             "content_body": str(p.content_body),
-            "deck_url": None,
+            "deck_url": f"/api/pitches/{int(p.id)}/deck" if attachment and attachment.file_blob else None,
         })
 
     return response_data
@@ -554,11 +554,30 @@ def get_my_pitches_analytics(request):
                 "is_verified": bool(p.is_verified),
                 "content_body": str(p.content_body),
                 "created_at": p.created_at.isoformat(),
-                "deck_url": None,
+                "deck_url": f"/api/pitches/{int(p.id)}/deck" if p.attachments.first() and p.attachments.first().file_blob else None,
             }
             for p in pitches
         ],
     }
+
+
+@router.get("/pitches/{pitch_id}/deck")
+def get_pitch_deck(request, pitch_id: int):
+    try:
+        pitch = Pitch.objects.get(id=pitch_id)
+        attachment = pitch.attachments.first()
+        if not attachment or not attachment.file_blob:
+            return {"error": "Deck not found"}
+
+        from django.http import HttpResponse
+
+        content_type = str(attachment.file_type or "application/octet-stream")
+        response = HttpResponse(bytes(attachment.file_blob), content_type=content_type)
+        filename = str(attachment.file_name or f"pitch_{pitch_id}_deck")
+        response["Content-Disposition"] = f'inline; filename="{filename}"'
+        return response
+    except Pitch.DoesNotExist:
+        return {"error": "Pitch not found"}
 
 
 # ---------------------------------------------------------------------------
