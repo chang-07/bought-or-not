@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { motion } from "framer-motion";
-import { FileUp, Send, TrendingUp, AlertCircle, RefreshCw } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { FileUp, Send, TrendingUp, AlertCircle, RefreshCw, ChevronRight, ShieldCheck } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 
@@ -45,7 +45,6 @@ export default function NewPitchPage() {
   useEffect(() => {
     const q = normalizedTicker;
 
-    // keep dropdown behavior sensible
     if (!q) {
       setSuggestions([]);
       setShowSuggestions(false);
@@ -54,7 +53,6 @@ export default function NewPitchPage() {
       return;
     }
 
-    // debounce API calls
     const timer = setTimeout(async () => {
       try {
         setSearching(true);
@@ -88,7 +86,6 @@ export default function NewPitchPage() {
     return () => clearTimeout(timer);
   }, [normalizedTicker]);
 
-  // close dropdown on outside click
   useEffect(() => {
     const onDocClick = (e: MouseEvent) => {
       const target = e.target as Node;
@@ -157,7 +154,6 @@ export default function NewPitchPage() {
 
     try {
       const baseURL = "";
-
       const payload = new FormData();
       payload.append(
         "payload",
@@ -175,49 +171,67 @@ export default function NewPitchPage() {
       });
 
       if (res.data.success) {
-        setSuccess("Pitch submitted perfectly. Verification in progress!");
+        setSuccess("Transmission successful. Awaiting protocol verification...");
         setTimeout(() => router.push("/dashboard"), 2000);
       } else {
-        setError(res.data.error || "Failed to submit pitch");
+        setError(res.data.error || "Broadcast failure");
       }
     } catch {
-      setError("Connection error or unauthorized.");
+      setError("Ulink connection terminated.");
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#09090b] text-white p-6 relative overflow-hidden">
-      <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-600/10 blur-[150px] pointer-events-none" />
+  const containerVariants = {
+    hidden: { opacity: 0, y: 30 },
+    visible: {
+      opacity: 1, y: 0,
+      transition: { duration: 0.6, staggerChildren: 0.08 }
+    }
+  };
 
-      <main className="max-w-3xl mx-auto relative z-10 py-12">
-        <div className="mb-10 text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-xl shadow-blue-500/20 mb-6">
-            <TrendingUp className="w-8 h-8 text-white" />
+  const itemVariants = {
+    hidden: { opacity: 0, y: 15 },
+    visible: { opacity: 1, y: 0 }
+  };
+
+  return (
+    <div className="min-h-screen p-6 relative overflow-hidden">
+      <div className="absolute top-[5%] right-[-5%] w-[400px] h-[400px] rounded-full bg-yellow-400/5 blur-[120px] pointer-events-none" />
+
+      <motion.main 
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="max-w-3xl mx-auto relative z-10 py-16"
+      >
+        <motion.div variants={itemVariants} className="mb-12">
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-1.5 h-8 bg-yellow-400 rounded-full shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
+            <h1 className="text-4xl font-black tracking-tighter uppercase italic">
+              Dispatch Intel
+            </h1>
           </div>
-          <h1 className="text-4xl font-bold tracking-tight mb-3">
-            Draft a Pitch
-          </h1>
-          <p className="text-gray-400 max-w-lg mx-auto">
-            Submit your research. Once you post, VSPP automatically verifies
-            your "Skin in the Game" via SnapTrade.
+          <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] ml-1">
+            Submit research for instant cross-exchange verification
           </p>
-        </div>
+        </motion.div>
 
         <motion.div
-          className="bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
+          variants={itemVariants}
+          className="bg-[#111114]/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden"
         >
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-2 gap-6">
-              <div className="space-y-2 relative">
-                <label className="text-sm font-medium text-gray-300 ml-1">
-                  Ticker Symbol
+          <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/5 rounded-full blur-3xl pointer-events-none" />
+          
+          <form onSubmit={handleSubmit} className="space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3 relative">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
+                  Asset Identifier (Ticker)
                 </label>
                 <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-yellow-400/70 font-black italic">
                     $
                   </div>
                   <input
@@ -238,97 +252,104 @@ export default function NewPitchPage() {
                       if (suggestions.length > 0) setShowSuggestions(true);
                     }}
                     onKeyDown={onTickerKeyDown}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-10 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all uppercase"
+                    className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-10 pr-10 text-white font-bold placeholder:text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all uppercase"
                   />
                   {searching && (
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                      <div className="w-4 h-4 border-2 border-white/20 border-t-white/80 rounded-full animate-spin" />
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                      <div className="w-4 h-4 border-2 border-yellow-400/20 border-t-yellow-400 rounded-full animate-spin" />
                     </div>
                   )}
                 </div>
 
-                {showSuggestions && (
-                  <div
-                    ref={dropdownRef}
-                    className="absolute z-30 mt-1 w-full bg-[#111114] border border-white/10 rounded-xl shadow-2xl max-h-64 overflow-y-auto"
-                  >
-                    {suggestions.length === 0 ? (
-                      <div className="px-3 py-2 text-sm text-gray-400">
-                        No matching symbols
-                      </div>
-                    ) : (
-                      suggestions.map((item, idx) => (
-                        <button
-                          key={`${item.id}-${item.ticker}-${idx}`}
-                          type="button"
-                          onMouseDown={(e) => {
-                            // prevent input blur before click selection
-                            e.preventDefault();
-                            selectSuggestion(item);
-                          }}
-                          className={`w-full text-left px-3 py-2 border-b border-white/5 last:border-b-0 transition-colors ${
-                            idx === highlightedIndex
-                              ? "bg-blue-500/20"
-                              : "hover:bg-white/5"
-                          }`}
-                        >
-                          <div className="text-sm font-semibold text-white">
-                            {item.ticker}
-                          </div>
-                          <div className="text-xs text-gray-400 truncate">
-                            {item.name || "Unknown company"}
-                          </div>
-                        </button>
-                      ))
-                    )}
-                  </div>
-                )}
+                <AnimatePresence>
+                  {showSuggestions && (
+                    <motion.div
+                      ref={dropdownRef}
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="absolute z-30 mt-2 w-full bg-[#18181b] border border-white/10 rounded-2xl shadow-2xl max-h-64 overflow-y-auto backdrop-blur-xl"
+                    >
+                      {suggestions.length === 0 ? (
+                        <div className="px-5 py-4 text-[10px] font-black text-gray-600 uppercase tracking-widest">
+                          No protocol matches
+                        </div>
+                      ) : (
+                        suggestions.map((item, idx) => (
+                          <button
+                            key={`${item.id}-${item.ticker}-${idx}`}
+                            type="button"
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              selectSuggestion(item);
+                            }}
+                            className={`w-full text-left px-5 py-4 border-b border-white/5 last:border-b-0 transition-all ${
+                              idx === highlightedIndex
+                                ? "bg-yellow-400 text-black"
+                                : "hover:bg-white/5"
+                            }`}
+                          >
+                            <div className={`text-sm font-black italic ${idx === highlightedIndex ? "text-black" : "text-white"}`}>
+                              {item.ticker}
+                            </div>
+                            <div className={`text-[9px] font-bold uppercase tracking-wider truncate ${idx === highlightedIndex ? "text-black/70" : "text-gray-500"}`}>
+                              {item.name || "Unknown entity"}
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300 ml-1">
-                  Target Price
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
+                  Target Price Vector
                 </label>
                 <div className="relative">
-                  <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500 font-bold">
+                  <div className="absolute left-5 top-1/2 -translate-y-1/2 text-yellow-400/70 font-black italic">
                     $
                   </div>
                   <input
                     type="number"
                     step="0.01"
-                    placeholder="250.00"
+                    placeholder="0.00"
                     required
                     value={formData.targetPrice}
                     onChange={(e) =>
                       setFormData({ ...formData, targetPrice: e.target.value })
                     }
-                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-10 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-10 pr-4 text-white font-bold placeholder:text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all"
                   />
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300 ml-1">
-                Executive Summary (Markdown supported)
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
+                Executive Intelligence Summary (Markdown)
               </label>
               <textarea
                 required
-                rows={5}
-                placeholder="Why is this a high conviction trade? Provide your thesis here..."
+                rows={6}
+                placeholder="Detail the thesis and convictions..."
                 value={formData.contentBody}
                 onChange={(e) =>
                   setFormData({ ...formData, contentBody: e.target.value })
                 }
-                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 px-4 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all resize-none"
+                className="w-full bg-black/60 border border-white/10 rounded-2xl py-5 px-6 text-white font-medium placeholder:text-gray-700 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all resize-none leading-relaxed"
               />
             </div>
 
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-300 ml-1">
-                Attach Pitch Deck
+            <div className="space-y-3">
+              <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
+                Intelligence Artifact (Deck)
               </label>
-              <div className="border-2 border-dashed border-white/10 rounded-2xl bg-black/20 hover:bg-black/40 transition-colors p-8 flex flex-col items-center justify-center relative cursor-pointer">
+              <motion.div 
+                whileHover={{ borderColor: "rgba(250, 204, 21, 0.4)" }}
+                className="border-2 border-dashed border-white/10 rounded-[2rem] bg-black/40 hover:bg-black/60 transition-all p-12 flex flex-col items-center justify-center relative cursor-pointer"
+              >
                 <input
                   type="file"
                   accept=".pdf,.pptx"
@@ -340,64 +361,87 @@ export default function NewPitchPage() {
                   }}
                 />
 
-                {file ? (
-                  <div className="flex flex-col items-center text-emerald-400">
-                    <FileUp className="w-10 h-10 mb-2" />
-                    <p className="font-medium text-sm text-center truncate max-w-[200px]">
-                      {file.name}
-                    </p>
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center text-gray-400">
-                    <FileUp className="w-10 h-10 mb-3 text-gray-500" />
-                    <p className="font-medium text-sm">
-                      Click or drag file to upload
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      PDF or PPTX up to 10MB
-                    </p>
-                  </div>
-                )}
-              </div>
+                <AnimatePresence mode="wait">
+                  {file ? (
+                    <motion.div 
+                      key="file"
+                      initial={{ scale: 0.9, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      className="flex flex-col items-center text-yellow-400"
+                    >
+                      <div className="bg-yellow-400 p-4 rounded-2xl mb-4 shadow-[0_0_20px_rgba(250,204,21,0.2)]">
+                        <FileUp className="w-8 h-8 text-black" />
+                      </div>
+                      <p className="font-black text-xs uppercase tracking-widest text-center truncate max-w-[250px]">
+                        {file.name}
+                      </p>
+                    </motion.div>
+                  ) : (
+                    <motion.div 
+                      key="no-file"
+                      className="flex flex-col items-center text-gray-600"
+                    >
+                      <FileUp className="w-10 h-10 mb-5 text-gray-700 opacity-50" />
+                      <p className="font-black text-[10px] uppercase tracking-[0.2em]">
+                        Click to upload Intel artifact
+                      </p>
+                      <p className="text-[9px] font-bold text-gray-700 mt-2 uppercase">
+                        PDF / PPTX / MAX 10MB
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
             </div>
 
             {error && (
-              <div className="flex items-center gap-2 text-red-400 bg-red-400/10 p-4 rounded-xl text-sm font-medium">
-                <AlertCircle className="w-5 h-5" />
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-3 text-red-400 bg-red-400/5 p-5 rounded-2xl border border-red-400/10 text-xs font-black uppercase tracking-widest"
+              >
+                <AlertCircle className="w-5 h-5 shrink-0" />
                 <p>{error}</p>
-              </div>
+              </motion.div>
             )}
 
             {success && (
-              <div className="flex items-center gap-2 text-emerald-400 bg-emerald-400/10 p-4 rounded-xl text-sm font-medium">
-                <RefreshCw className="w-5 h-5 animate-spin" />
+              <motion.div 
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center gap-3 text-emerald-400 bg-emerald-400/5 p-5 rounded-2xl border border-emerald-400/10 text-xs font-black uppercase tracking-widest"
+              >
+                <RefreshCw className="w-5 h-5 animate-spin shrink-0" />
                 <p>{success}</p>
-              </div>
+              </motion.div>
             )}
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02, x: 5 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading || !!success}
-              className="group relative w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-4 px-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98] disabled:opacity-70 disabled:scale-100 mt-6"
+              className="group relative w-full flex items-center justify-center gap-4 bg-yellow-400 hover:bg-yellow-300 text-black font-black py-5 px-6 rounded-2xl shadow-2xl shadow-yellow-400/10 transition-all disabled:opacity-50 mt-10 h-16 uppercase italic tracking-widest text-sm"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-6 h-6 border-3 border-black/20 border-t-black rounded-full animate-spin" />
               ) : success ? (
-                <span>Published!</span>
+                <span>Transmission Active</span>
               ) : (
                 <>
-                  <span>Submit for Verification</span>
-                  <Send className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <span>Initialize Broadcast</span>
+                  <ChevronRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                 </>
               )}
-            </button>
-            <p className="text-center text-xs text-gray-500 flex justify-center items-center gap-1.5 pt-2">
-              <AlertCircle className="w-3.5 h-3.5" />
-              Your Snapshot brokerage connection will be pinged instantly.
-            </p>
+            </motion.button>
+
+            <div className="text-center text-[9px] text-gray-600 font-black uppercase tracking-[0.2em] flex justify-center items-center gap-3 pt-4">
+              <ShieldCheck className="w-4 h-4 text-yellow-400/50" />
+              Node verification will trigger upon submission
+            </div>
           </form>
         </motion.div>
-      </main>
+      </motion.main>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { motion } from "framer-motion";
 import {
   Home,
   Briefcase,
@@ -26,42 +27,76 @@ export default function TopNav() {
   ];
 
   return (
-    <nav className="sticky top-0 z-50 w-full border-b border-white/5 bg-[#09090b]/60 backdrop-blur-xl">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16">
-          {/* Brand Logo */}
-          <Link href="/dashboard" className="flex items-center gap-2.5 group">
-            <div className="bg-gradient-to-tr from-blue-700 to-blue-500 p-1.5 rounded-xl shadow-[0_0_15px_rgba(59,130,246,0.5)] group-hover:shadow-[0_0_25px_rgba(59,130,246,0.7)] transition-all">
-              <TrendingUp className="w-5 h-5 text-white" strokeWidth={2.5} />
+    <nav className="sticky top-0 z-[60] w-full border-b border-white/[0.03] bg-[#09090b]/90 backdrop-blur-md">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="flex items-center justify-between h-20">
+          {/* Brand Logo - Tactical Version */}
+          <Link href="/dashboard" className="flex items-center gap-4 group">
+            <motion.div 
+              whileHover={{ rotate: 90, scale: 1.1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 10 }}
+              className="relative w-10 h-10 flex items-center justify-center"
+            >
+              <div className="absolute inset-0 bg-yellow-400 rounded-xl rotate-45 group-hover:rotate-0 transition-transform duration-500 shadow-[0_0_20px_rgba(250,204,21,0.3)]" />
+              <TrendingUp className="w-5 h-5 text-black relative z-10" strokeWidth={3} />
+            </motion.div>
+            <div className="flex flex-col -space-y-1">
+              <span className="font-black text-2xl italic tracking-tighter text-white group-hover:text-yellow-400 transition-colors uppercase">
+                VSPP
+              </span>
+              <span className="text-[8px] font-black tracking-[0.4em] text-gray-600 uppercase">Deployed v3.4</span>
             </div>
-            <span className="font-extrabold text-xl tracking-tight text-white group-hover:text-blue-400 transition-colors">
-              VSPP
-            </span>
           </Link>
 
-          {/* Navigation Buttons */}
-          <div className="flex space-x-2 sm:space-x-4">
-            {navLinks.map((link) => {
+          {/* Navigation Buttons - Tactical High-Performance */}
+          <div className="flex items-center gap-2">
+            {navLinks.map((link, idx) => {
               const Icon = link.icon;
               const isActive = pathname === link.href;
               return (
                 <Link
                   key={link.name}
                   href={link.href}
-                  className={`
-                                        flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold transition-all duration-300
-                                        ${
-                                          isActive
-                                            ? "bg-blue-500/10 text-blue-400 border border-blue-500/20 shadow-[0_0_15px_rgba(59,130,246,0.1)]"
-                                            : "text-gray-400 hover:text-white hover:bg-white/5"
-                                        }
-                                    `}
+                  className="relative group"
                 >
-                  <Icon className="w-4 h-4" />
-                  <span className="hidden sm:inline">{link.name}</span>
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: idx * 0.1 }}
+                    className={`
+                      flex items-center gap-2.5 px-5 py-2.5 rounded-xl transition-all duration-300 relative overflow-hidden
+                      ${
+                        isActive
+                          ? "text-yellow-400"
+                          : "text-gray-500 hover:text-white"
+                      }
+                    `}
+                  >
+                    <Icon className={`w-4 h-4 transition-transform group-hover:scale-110 ${isActive ? 'stroke-[3px]' : 'stroke-2'}`} />
+                    <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest italic">{link.name}</span>
+                    
+                    {isActive && (
+                      <motion.div
+                        layoutId="nav-glow"
+                        className="absolute inset-0 bg-yellow-400/[0.03] -z-10"
+                      />
+                    )}
+                    
+                    {isActive && (
+                      <motion.div 
+                        layoutId="nav-indicator"
+                        className="absolute bottom-0 left-4 right-4 h-0.5 bg-yellow-400 shadow-[0_0_10px_rgba(250,204,21,0.5)] rounded-full"
+                      />
+                    )}
+                  </motion.div>
                 </Link>
               );
             })}
+            
+            <div className="ml-4 pl-4 border-l border-white/5 flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+              <span className="text-[8px] font-black text-gray-700 uppercase tracking-widest hidden lg:block">Systems Online</span>
+            </div>
           </div>
         </div>
       </div>

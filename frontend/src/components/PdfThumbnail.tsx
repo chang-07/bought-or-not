@@ -2,9 +2,11 @@
 
 import { useState } from "react";
 import { Document, Page, pdfjs } from "react-pdf";
-import { Download } from "lucide-react";
+import { Download, FileText, ChevronRight, ShieldCheck } from "lucide-react";
+import { motion } from "framer-motion";
 
-pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+// Configure worker for react-pdf
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface PdfThumbnailProps {
   url: string;
@@ -18,49 +20,74 @@ export default function PdfThumbnail({ url, ticker }: PdfThumbnailProps) {
     setNumPages(numPages);
   }
 
+  const handleDownload = () => {
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${ticker}_Pitch_Deck.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noreferrer"
-      download={`${ticker}_pitch.pdf`}
-      className="block relative group overflow-hidden bg-white/5 rounded-xl border border-white/10 hover:border-blue-500/50 transition-colors cursor-pointer"
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="relative group cursor-pointer overflow-hidden bg-black/40 border border-white/5 group-hover:border-yellow-400/30 transition-all duration-500 rounded-2xl" 
+      onClick={handleDownload}
     >
-      <div className="absolute top-3 right-3 z-10 opacity-0 group-hover:opacity-100 transition-opacity bg-black/80 backdrop-blur-md text-white p-2.5 rounded-xl border border-white/20 flex items-center gap-2 text-sm font-semibold shadow-xl">
-        <Download className="w-4 h-4" />
-        Download Pitch
-      </div>
-      <div className="flex justify-center items-center h-[350px] sm:h-[420px] overflow-hidden bg-black/20">
+      <div className="flex justify-center items-center h-[350px] sm:h-[420px] overflow-hidden transition-all duration-700 group-hover:scale-[1.05] group-hover:blur-[2px]">
         <Document
           file={url}
           onLoadSuccess={onDocumentLoadSuccess}
           loading={
-            <div className="h-full flex flex-col items-center justify-center text-sm text-gray-400 gap-3">
-              <div className="w-6 h-6 border-2 border-white/20 border-t-white/80 rounded-full animate-spin" />
-              Loading preview...
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-10 h-10 border-4 border-yellow-400/20 border-t-yellow-400 rounded-full animate-spin" />
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 animate-pulse">Establishing Intel Feed...</span>
             </div>
           }
           error={
-            <div className="p-10 flex flex-col items-center justify-center text-center text-sm text-gray-400">
-              <div className="mb-2 text-white/50 bg-white/5 p-4 rounded-full">
-                <Download className="w-6 h-6" />
-              </div>
-              Preview not available natively. <br />
-              <span className="text-blue-400 font-medium mt-1">
-                Click to download deck directly
-              </span>
+            <div className="text-center p-12 grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
+              <FileText className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
+              <p className="text-[10px] font-black uppercase tracking-widest text-gray-600">Artifact Preview Unavailable</p>
+              <p className="text-[9px] font-bold text-yellow-400/50 mt-2 uppercase tracking-wider">Click for Direct Access</p>
             </div>
           }
         >
           <Page
             pageNumber={1}
-            renderTextLayer={false}
-            renderAnnotationLayer={false}
             height={420}
-            className="shadow-2xl"
+            renderAnnotationLayer={false}
+            renderTextLayer={false}
+            className="max-w-full h-auto object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
           />
         </Document>
       </div>
-    </a>
+
+      {/* Tactical UI Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-500 flex flex-col justify-end p-8">
+        <motion.div 
+          initial={{ y: 20, opacity: 0 }}
+          whileHover={{ y: 0, opacity: 1 }}
+          className="flex items-center justify-between"
+        >
+          <div className="flex items-center gap-4">
+            <div className="bg-yellow-400 p-3 rounded-2xl shadow-[0_0_20px_rgba(250,204,21,0.4)]">
+              <Download className="w-5 h-5 text-black" strokeWidth={3} />
+            </div>
+            <div>
+              <div className="text-[11px] font-black text-white uppercase tracking-widest leading-none mb-1.5">Download Pitch Deck</div>
+              <div className="text-[9px] font-black text-yellow-400/70 uppercase tracking-[0.2em] leading-none flex items-center gap-1.5">
+                <ShieldCheck className="w-3 h-3" /> Encrypted PDF Artifact
+              </div>
+            </div>
+          </div>
+          <ChevronRight className="w-6 h-6 text-yellow-400 animate-pulse" />
+        </motion.div>
+      </div>
+      
+      {/* Grid Pattern Overlay Subtle */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+    </motion.div>
   );
 }

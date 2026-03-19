@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Briefcase,
   AlertTriangle,
@@ -8,6 +9,13 @@ import {
   CheckCircle2,
   Wallet,
   Bug,
+  TrendingUp,
+  Activity,
+  Target,
+  ArrowRight,
+  ShieldCheck,
+  ChevronRight,
+  ExternalLink,
 } from "lucide-react";
 import axios from "axios";
 
@@ -100,8 +108,6 @@ export default function PortfolioPage() {
         ? res.data.portfolio
         : [];
 
-      // Align exactly with backend schema:
-      // account => { account_id, account_name, positions[], balances[], debug? }
       const normalized = rawPortfolio.map((acc) => {
         const positions = Array.isArray(acc.positions)
           ? acc.positions.map((p) => ({
@@ -163,11 +169,9 @@ export default function PortfolioPage() {
         }, 2000);
       } else {
         setSellState({ symbol, status: "error" });
-        alert(res.data?.error || "Failed to sell.");
       }
     } catch {
       setSellState({ symbol, status: "error" });
-      alert("Connection error during sell execution.");
     }
   };
 
@@ -185,115 +189,148 @@ export default function PortfolioPage() {
       if (res.data?.redirect_url) {
         window.location.href = res.data.redirect_url;
       } else {
-        alert(res.data?.error || "Failed to generate portal.");
         setManageLoading(false);
       }
     } catch {
-      alert("Failed to reach server.");
       setManageLoading(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#09090b] flex justify-center items-center">
-        <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
+      <div className="min-h-screen bg-[#09090b] bg-grid-vertical flex justify-center items-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-yellow-400/20 border-t-yellow-400 rounded-full animate-spin" />
+          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 animate-pulse">Establishing Secure Stream...</span>
+        </div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#09090b] flex flex-col justify-center items-center text-white p-6 text-center">
-        <AlertTriangle className="w-16 h-16 text-rose-500 mb-4" />
-        <h2 className="text-2xl font-bold">Unable to Load Portfolio</h2>
-        <p className="text-gray-400 mt-2 max-w-md">{error}</p>
+      <div className="min-h-screen bg-[#09090b] bg-grid-vertical flex flex-col justify-center items-center text-white p-6 text-center">
+        <AlertTriangle className="w-20 h-20 text-yellow-400 mb-6 drop-shadow-[0_0_15px_rgba(250,204,21,0.3)]" />
+        <h2 className="text-3xl font-black uppercase italic tracking-tighter">Terminal Offline</h2>
+        <p className="text-gray-500 mt-4 max-w-md text-[10px] font-black uppercase tracking-widest leading-relaxed">
+          {error}
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#09090b] text-white p-6 relative">
-      <div className="fixed top-[-10%] left-[50%] -translate-x-1/2 w-[800px] h-[500px] rounded-full bg-blue-600/5 blur-[150px] pointer-events-none" />
-
-      <div className="max-w-5xl mx-auto mb-10 relative z-10 pt-6">
-        <header className="mb-6 flex flex-col gap-4 md:flex-row md:justify-between md:items-start">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <Briefcase className="w-8 h-8 text-blue-500" />
-              My Portfolio
-            </h1>
-            <p className="text-gray-400 text-sm mt-1">
-              Manage your SnapTrade synced holdings and close out copied
-              pitches.
+    <div className="min-h-screen bg-[#09090b] text-white p-8 relative">
+      <div className="max-w-6xl mx-auto space-y-12 relative z-10">
+        <motion.header 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col gap-8 md:flex-row md:justify-between md:items-end border-b border-white/5 pb-12"
+        >
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-8 bg-yellow-400 rounded-full shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
+              <h1 className="text-4xl font-black uppercase italic tracking-tighter">
+                Control Center
+              </h1>
+            </div>
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] max-w-xl leading-relaxed">
+              Real-time synchronization with primary exchange protocols. 
+              Manage assets and liquidity across linked brokerage nodes.
             </p>
           </div>
 
-          <button
+          <motion.button
+            whileHover={{ scale: 1.05, x: 5 }}
+            whileTap={{ scale: 0.95 }}
             onClick={handleManageBrokerages}
             disabled={manageLoading}
-            className="bg-blue-600 hover:bg-blue-500 text-white font-semibold py-2 px-5 rounded-full transition-colors flex items-center shadow-lg shadow-blue-500/20 disabled:opacity-50"
+            className="group relative bg-yellow-400 hover:bg-yellow-300 text-black font-black py-4 px-8 rounded-2xl shadow-xl shadow-yellow-400/10 transition-all disabled:opacity-50 uppercase italic tracking-widest text-xs flex items-center gap-3"
           >
             {manageLoading ? (
-              <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+              <div className="w-5 h-5 border-3 border-black/20 border-t-black rounded-full animate-spin" />
             ) : (
-              "Manage Brokerages"
+              <>
+                Manage Nodes
+                <ExternalLink className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
+              </>
             )}
-          </button>
-        </header>
+          </motion.button>
+        </motion.header>
 
-        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
-          <StatCard label="Accounts" value={accounts.length} />
-          <StatCard label="Open Positions" value={totals.totalPositions} />
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <StatCard label="Linked Nodes" value={accounts.length} icon={<Activity />} />
+          <StatCard label="Live Positions" value={totals.totalPositions} icon={<Target />} />
           <StatCard
-            label="Market Value"
+            label="Equity Value"
             value={`$${totals.totalMarketValue.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+            icon={<TrendingUp />}
+            trend={totals.totalPnL >= 0 ? "up" : "down"}
           />
           <StatCard
-            label="USD Cash"
+            label="Liquid Reserves"
             value={`$${totals.totalCash.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
+            icon={<Wallet />}
           />
         </section>
 
-        <main className="space-y-8">
+        <main className="space-y-12 pb-20">
           {accounts.length === 0 ? (
-            <div className="text-center p-12 bg-white/5 rounded-2xl border border-white/10">
-              <p className="text-gray-400">
-                No brokerage accounts found. Please link one on the connection
-                portal.
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center p-20 bg-black/40 rounded-[3rem] border border-white/5 flex flex-col items-center"
+            >
+              <div className="bg-white/5 p-6 rounded-3xl mb-6">
+                <Briefcase className="w-12 h-12 text-gray-700" />
+              </div>
+              <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                No active brokerage nodes detected. 
+                Establish a link to initialize the dashboard.
               </p>
-            </div>
+            </motion.div>
           ) : (
-            accounts.map((account) => (
-              <div
-                key={account.account_id}
-                className="bg-[#18181b]/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden shadow-xl"
-              >
-                <div className="p-6 border-b border-white/10 bg-white/5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                  <h2 className="text-xl font-bold">{account.account_name}</h2>
-                  <span className="text-xs text-blue-400 bg-blue-500/10 px-3 py-1 rounded-full uppercase tracking-wider font-semibold border border-blue-500/20 w-fit">
-                    Synced
-                  </span>
-                </div>
+            <div className="space-y-12">
+              {accounts.map((account, idx) => (
+                <motion.div
+                  key={account.account_id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="bg-[#111114] border border-white/5 rounded-[2.5rem] overflow-hidden shadow-2xl"
+                >
+                  <div className="p-10 border-b border-white/5 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-6">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center">
+                        <Activity className="w-6 h-6 text-yellow-400" />
+                      </div>
+                      <div>
+                        <h2 className="text-2xl font-black uppercase italic tracking-tighter">{account.account_name}</h2>
+                        <div className="text-[10px] font-black text-gray-600 uppercase tracking-widest mt-1">
+                          ID: {account.account_id.slice(0, 8)}...
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2 text-yellow-400 bg-yellow-400/5 px-4 py-2 rounded-xl border border-yellow-400/20 text-[10px] font-black uppercase tracking-widest">
+                      <ShieldCheck className="w-4 h-4" /> Protocol Synced
+                    </div>
+                  </div>
 
-                <div className="p-6 border-b border-white/10">
-                  <h3 className="text-sm uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
-                    <Wallet className="w-4 h-4" />
-                    Balances
-                  </h3>
-                  {account.balances.length === 0 ? (
-                    <p className="text-sm text-gray-500">No balance data.</p>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="p-10 bg-black/20">
+                    <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-6 flex items-center gap-3">
+                      <Wallet className="w-4 h-4" />
+                      Liquidity Nodes
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {account.balances.map((b, i) => (
                         <div
                           key={`${b.currency}-${i}`}
-                          className="bg-black/30 border border-white/10 rounded-xl p-3"
+                          className="bg-black/40 border border-white/5 rounded-2xl p-6 group hover:border-yellow-400/20 transition-colors"
                         >
-                          <div className="text-xs text-gray-400">
-                            {b.currency || "N/A"}
+                          <div className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-2 group-hover:text-yellow-400 transition-colors">
+                            {b.currency || "N/A"} RESERVES
                           </div>
-                          <div className="text-lg font-semibold">
+                          <div className="text-2xl font-black italic tracking-tighter text-white">
                             {b.cash.toLocaleString(undefined, {
                               maximumFractionDigits: 2,
                             })}
@@ -301,123 +338,143 @@ export default function PortfolioPage() {
                         </div>
                       ))}
                     </div>
-                  )}
-                </div>
+                  </div>
 
-                <div className="p-0">
-                  {account.positions.length === 0 ? (
-                    <div className="p-6 text-center text-gray-500 text-sm">
-                      No tradable equity positions found in this account.
-                    </div>
-                  ) : (
+                  <div className="overflow-x-auto">
                     <table className="w-full text-left border-collapse">
                       <thead>
-                        <tr className="border-b border-white/5 bg-black/20 text-xs uppercase tracking-wider text-gray-400">
-                          <th className="p-4 font-semibold">Symbol</th>
-                          <th className="p-4 font-semibold">Shares</th>
-                          <th className="p-4 font-semibold">Price</th>
-                          <th className="p-4 font-semibold">Avg Cost</th>
-                          <th className="p-4 font-semibold">Open P/L</th>
-                          <th className="p-4 font-semibold">Action</th>
+                        <tr className="bg-black/40 text-[10px] font-black uppercase tracking-widest text-gray-600">
+                          <th className="p-8">Instrument</th>
+                          <th className="p-8">Quantum</th>
+                          <th className="p-8">Mark Price</th>
+                          <th className="p-8">Avg Entry</th>
+                          <th className="p-8">Unrealized P/L</th>
+                          <th className="p-8 text-right">Dispatch</th>
                         </tr>
                       </thead>
-                      <tbody>
+                      <tbody className="divide-y divide-white/5">
                         {account.positions.map((p, i) => {
                           const pnlPositive = p.open_pnl >= 0;
                           return (
                             <tr
                               key={`${p.ticker}-${i}`}
-                              className="border-b border-white/5 hover:bg-white/5 transition-colors group"
+                              className="hover:bg-white/[0.02] transition-colors group"
                             >
-                              <td className="p-4">
-                                <div className="font-bold text-lg text-white">
+                              <td className="p-8">
+                                <div className="text-xl font-black italic tracking-tighter text-white group-hover:text-yellow-400 transition-colors">
                                   ${p.ticker}
                                 </div>
                               </td>
-                              <td className="p-4 text-gray-300">
-                                {p.units.toFixed(4)}
+                              <td className="p-8 text-sm font-black text-gray-500 italic">
+                                {p.units.toFixed(2)}
                               </td>
-                              <td className="p-4 text-gray-300">
+                              <td className="p-8 text-sm font-black text-white italic">
                                 ${p.price.toFixed(2)}
                               </td>
-                              <td className="p-4 text-gray-300">
+                              <td className="p-8 text-sm font-black text-gray-500 italic">
                                 ${p.average_purchase_price.toFixed(2)}
                               </td>
-                              <td
-                                className={`p-4 font-semibold ${pnlPositive ? "text-emerald-400" : "text-rose-400"}`}
-                              >
-                                {pnlPositive ? "+" : ""}${p.open_pnl.toFixed(2)}
+                              <td className="p-8">
+                                <div className={`text-sm font-black italic ${pnlPositive ? "text-emerald-400" : "text-rose-400"}`}>
+                                  {pnlPositive ? "+" : ""}${p.open_pnl.toFixed(2)}
+                                </div>
                               </td>
-                              <td className="p-4">
-                                {sellState.symbol === p.ticker &&
-                                sellState.status === "success" ? (
-                                  <span className="flex items-center gap-1 text-emerald-400 font-semibold bg-emerald-500/10 px-3 py-1.5 rounded-lg w-fit">
-                                    <CheckCircle2 className="w-4 h-4" /> Ordered
-                                  </span>
-                                ) : (
-                                  <button
-                                    onClick={() =>
-                                      handleSell(
-                                        account.account_id,
-                                        p.ticker,
-                                        p.units,
-                                      )
-                                    }
-                                    disabled={
-                                      sellState.symbol === p.ticker &&
-                                      sellState.status === "loading"
-                                    }
-                                    className="flex items-center gap-2 bg-rose-500/20 hover:bg-rose-500 hover:text-white border border-rose-500/50 text-rose-400 font-medium py-1.5 px-4 rounded-xl transition-all disabled:opacity-50"
-                                  >
-                                    {sellState.symbol === p.ticker &&
-                                    sellState.status === "loading" ? (
-                                      <div className="w-4 h-4 border-2 border-rose-500/30 border-t-rose-500 rounded-full animate-spin" />
-                                    ) : (
-                                      <>
-                                        Sell Position{" "}
-                                        <TrendingDown className="w-4 h-4" />
-                                      </>
-                                    )}
-                                  </button>
-                                )}
+                              <td className="p-8 text-right">
+                                <AnimatePresence mode="wait">
+                                  {sellState.symbol === p.ticker && sellState.status === "success" ? (
+                                    <motion.div 
+                                      initial={{ opacity: 0, x: 10 }}
+                                      animate={{ opacity: 1, x: 0 }}
+                                      className="inline-flex items-center gap-2 text-emerald-400 bg-emerald-400/5 px-4 py-2 rounded-xl border border-emerald-400/20 text-[10px] font-black uppercase tracking-widest"
+                                    >
+                                      <CheckCircle2 className="w-4 h-4" /> Order Sent
+                                    </motion.div>
+                                  ) : (
+                                    <motion.button
+                                      whileHover={{ scale: 1.05 }}
+                                      whileTap={{ scale: 0.95 }}
+                                      onClick={() => handleSell(account.account_id, p.ticker, p.units)}
+                                      disabled={sellState.symbol === p.ticker && sellState.status === "loading"}
+                                      className="inline-flex items-center gap-2 bg-rose-500/10 hover:bg-rose-500 text-rose-500 hover:text-white border border-rose-500/20 font-black py-2 px-6 rounded-xl transition-all disabled:opacity-50 text-[10px] uppercase tracking-widest italic"
+                                    >
+                                      {sellState.symbol === p.ticker && sellState.status === "loading" ? (
+                                        <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                                      ) : (
+                                        <>
+                                          Sell <TrendingDown className="w-4 h-4" />
+                                        </>
+                                      )}
+                                    </motion.button>
+                                  )}
+                                </AnimatePresence>
                               </td>
                             </tr>
                           );
                         })}
                       </tbody>
                     </table>
-                  )}
-                </div>
-
-                <div className="p-4 border-t border-white/10 bg-black/20">
-                  <div className="flex items-center gap-2 text-xs text-gray-400">
-                    <Bug className="w-4 h-4" />
-                    <span>Debug:</span>
-                    <span>
-                      raw_positions={account.debug?.raw_positions_count ?? 0}
-                    </span>
-                    <span>
-                      parsed_positions=
-                      {account.debug?.parsed_positions_count ?? 0}
-                    </span>
                   </div>
-                </div>
-              </div>
-            ))
+
+                  {account.debug && (
+                    <div className="p-6 bg-black/40 border-t border-white/5">
+                      <div className="flex items-center gap-4 text-[9px] font-black uppercase tracking-[0.2em] text-gray-700">
+                        <Bug className="w-4 h-4" />
+                        <span>Telemetry:</span>
+                        <span className="bg-white/5 py-1 px-2 rounded-md">RAW_COUNT: {account.debug.raw_positions_count}</span>
+                        <span className="bg-white/5 py-1 px-2 rounded-md">PARSED_COUNT: {account.debug.parsed_positions_count}</span>
+                      </div>
+                    </div>
+                  )}
+                </motion.div>
+              ))}
+            </div>
           )}
         </main>
       </div>
+      
+      {/* Dynamic Background Noise */}
+      <div className="fixed inset-0 pointer-events-none opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] z-0" />
     </div>
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string | number }) {
+function StatCard({ 
+  label, 
+  value, 
+  icon, 
+  trend 
+}: { 
+  label: string; 
+  value: string | number; 
+  icon: React.ReactNode;
+  trend?: "up" | "down";
+}) {
   return (
-    <div className="bg-[#18181b]/80 border border-white/10 p-4 rounded-2xl">
-      <div className="text-xs uppercase tracking-wider text-gray-400 mb-1">
-        {label}
+    <motion.div 
+      whileHover={{ y: -5 }}
+      className="bg-[#111114] border border-white/5 p-8 rounded-[2rem] relative overflow-hidden group"
+    >
+      <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/5 blur-[50px] rounded-full -mr-16 -mt-16 group-hover:bg-yellow-400/10 transition-colors" />
+      
+      <div className="flex items-center justify-between mb-6">
+        <div className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 group-hover:text-yellow-400 transition-colors">
+          {label}
+        </div>
+        <div className="text-gray-600 group-hover:text-yellow-400 transition-colors">
+          {icon}
+        </div>
       </div>
-      <div className="text-xl font-bold text-white">{value}</div>
-    </div>
+      
+      <div className="flex items-end justify-between">
+        <div className="text-3xl font-black italic tracking-tighter text-white">
+          {value}
+        </div>
+        {trend && (
+          <div className={`p-1.5 rounded-lg ${trend === 'up' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-rose-400/10 text-rose-400'}`}>
+            {trend === 'up' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+          </div>
+        )}
+      </div>
+    </motion.div>
   );
 }

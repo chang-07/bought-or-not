@@ -41,59 +41,83 @@ export default function AuthPage() {
       } else {
         setError(isLogin ? 'Invalid credentials' : 'Username already exists');
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setError('Connection error to server.');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#09090b]">
-      {/* Background Gradients */}
-      <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] rounded-full bg-blue-600/20 blur-[120px]" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] rounded-full bg-indigo-600/20 blur-[120px]" />
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        duration: 0.6,
+        staggerChildren: 0.1
+      }
+    }
+  };
 
-      <main className="w-full max-w-md p-6 relative z-10">
+  const itemVariants = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0 }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
+      {/* Background Gradients */}
+      <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full bg-yellow-400/10 blur-[150px]" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[600px] h-[600px] rounded-full bg-yellow-600/5 blur-[150px]" />
+
+      <motion.main 
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        className="w-full max-w-md p-6 relative z-10"
+      >
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-8"
+          variants={itemVariants}
+          className="text-center mb-10"
         >
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-600 shadow-xl shadow-blue-500/20 mb-6">
-            <TrendingUp className="w-8 h-8 text-white" />
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight text-white mb-2">
+          <motion.div 
+            whileHover={{ rotate: 360, scale: 1.1 }}
+            transition={{ duration: 0.8, ease: "anticipate" }}
+            className="inline-flex items-center justify-center w-20 h-20 rounded-2xl bg-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.3)] mb-6"
+          >
+            <TrendingUp className="w-10 h-10 text-black" strokeWidth={3} />
+          </motion.div>
+          <h1 className="text-4xl font-black tracking-tighter text-white mb-2 italic">
             VSPP
           </h1>
-          <p className="text-gray-400">Verified Social Pitch Platform</p>
+          <p className="text-gray-400 font-medium tracking-wide uppercase text-xs">Verified Social Pitch Platform</p>
         </motion.div>
 
         <motion.div
-          className="bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl"
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
+          variants={itemVariants}
+          className="bg-[#18181b]/90 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-10 shadow-2xl relative overflow-hidden"
         >
-          <div className="flex p-1 bg-black/40 rounded-xl mb-8">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-yellow-400/50 to-transparent" />
+          
+          <div className="flex p-1.5 bg-black/50 rounded-2xl mb-10 border border-white/5">
             <button
               onClick={() => { setIsLogin(true); setError(''); }}
-              className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${isLogin ? 'bg-white/10 text-white shadow-sm' : 'text-gray-400 hover:text-white'
+              className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 ${isLogin ? 'bg-yellow-400 text-black shadow-lg shadow-yellow-400/20' : 'text-gray-500 hover:text-white'
                 }`}
             >
               Sign In
             </button>
             <button
               onClick={() => { setIsLogin(false); setError(''); }}
-              className={`flex-1 py-2.5 text-sm font-medium rounded-lg transition-all ${!isLogin ? 'bg-white/10 text-white shadow-sm' : 'text-gray-400 hover:text-white'
+              className={`flex-1 py-3 text-sm font-bold rounded-xl transition-all duration-300 ${!isLogin ? 'bg-yellow-400 text-black shadow-lg shadow-yellow-400/20' : 'text-gray-500 hover:text-white'
                 }`}
             >
               Create Account
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <AnimatePresence mode="wait">
               {!isLogin && (
                 <motion.div
@@ -103,74 +127,79 @@ export default function AuthPage() {
                   exit={{ opacity: 0, height: 0 }}
                   className="relative"
                 >
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
                   <input
                     type="email"
                     placeholder="Email address"
                     required={!isLogin}
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all font-medium"
                   />
                 </motion.div>
               )}
             </AnimatePresence>
 
             <div className="relative">
-              <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
                 type="text"
                 placeholder="Username"
                 required
                 value={formData.username}
                 onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all font-medium"
               />
             </div>
 
             <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
               <input
                 type="password"
                 placeholder="Password"
                 required
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full bg-black/40 border border-white/10 rounded-xl py-3 pl-12 pr-4 text-white placeholder:text-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all font-medium"
               />
             </div>
 
             {error && (
               <motion.p
-                initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                className="text-red-400 text-sm text-center font-medium"
+                initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }}
+                className="text-red-400 text-xs text-center font-bold uppercase tracking-wider bg-red-400/10 py-2 rounded-lg"
               >
                 {error}
               </motion.p>
             )}
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               type="submit"
               disabled={loading}
-              className="group relative w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-semibold py-3.5 px-4 rounded-xl shadow-lg shadow-blue-500/30 transition-all active:scale-[0.98] disabled:opacity-70"
+              className="group relative w-full flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold py-4 px-4 rounded-2xl shadow-xl shadow-yellow-400/20 transition-all disabled:opacity-70 mt-4 h-14"
             >
               {loading ? (
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <div className="w-6 h-6 border-3 border-black/20 border-t-black rounded-full animate-spin" />
               ) : (
                 <>
-                  <span>{isLogin ? 'Sign In' : 'Create Account'}</span>
-                  <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                  <span className="uppercase tracking-widest text-sm">{isLogin ? 'Access Portal' : 'Initialize Account'}</span>
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
                 </>
               )}
-            </button>
+            </motion.button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-white/10 text-center flex items-center justify-center gap-2 text-gray-400 text-sm">
-            <ShieldCheck className="w-4 h-4 text-emerald-400" />
-            <span>Bank-level encryption via SnapTrade</span>
-          </div>
+          <motion.div 
+            variants={itemVariants}
+            className="mt-8 pt-8 border-t border-white/5 text-center flex items-center justify-center gap-3 text-gray-500 text-[10px] font-bold uppercase tracking-widest"
+          >
+            <ShieldCheck className="w-4 h-4 text-yellow-400" />
+            <span>Encrypted via SnapTrade Protocol</span>
+          </motion.div>
         </motion.div>
-      </main>
+      </motion.main>
     </div>
   );
 }

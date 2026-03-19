@@ -12,8 +12,12 @@ import {
   TrendingUp,
   Eye,
   FileText,
+  Search,
+  ShieldCheck,
+  ChevronRight,
 } from "lucide-react";
 import axios from "axios";
+import PdfThumbnail from "@/components/PdfThumbnail";
 
 type MyPitch = {
   id: number;
@@ -102,236 +106,227 @@ export default function MyPitchesPage() {
 
   const formatDate = (iso: string) => {
     try {
-      return new Date(iso).toLocaleString();
+      return new Date(iso).toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+        year: "numeric"
+      });
     } catch {
       return iso;
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#09090b] text-white p-6 relative">
-      <div className="fixed top-[-10%] left-[50%] -translate-x-1/2 w-[800px] h-[500px] rounded-full bg-blue-600/5 blur-[150px] pointer-events-none" />
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#09090b] bg-grid-vertical flex justify-center items-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-12 h-12 border-4 border-yellow-400/20 border-t-yellow-400 rounded-full animate-spin" />
+          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 animate-pulse">Syncing Pitch Intel...</span>
+        </div>
+      </div>
+    );
+  }
 
-      <header className="max-w-6xl mx-auto mb-8 relative z-10 pt-6">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold flex items-center gap-3">
-              <BarChart3 className="w-8 h-8 text-blue-500" />
-              My Pitches
-            </h1>
-            <p className="text-gray-400 text-sm mt-1">
-              Track your pitch performance and verification progress.
+  return (
+    <div className="min-h-screen bg-[#09090b] text-white p-8 relative">
+      <div className="max-w-6xl mx-auto space-y-12 relative z-10">
+        <motion.header 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col gap-8 md:flex-row md:justify-between md:items-end border-b border-white/5 pb-12"
+        >
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="w-1.5 h-8 bg-yellow-400 rounded-full shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
+              <h1 className="text-4xl font-black uppercase italic tracking-tighter">
+                Intelligence Brief
+              </h1>
+            </div>
+            <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] max-w-xl leading-relaxed">
+              Track your deployed theses and monitor performance synchronization across global equity nodes.
             </p>
           </div>
 
-          <div className="flex gap-2">
-            <input
-              type="text"
-              placeholder="Search ticker or thesis..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="bg-white/5 border border-white/10 rounded-xl py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 placeholder:text-gray-500"
-            />
+          <div className="flex flex-wrap gap-4">
+            <div className="relative group">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-yellow-400 transition-colors" />
+              <input
+                type="text"
+                placeholder="FILTER INTEL..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="bg-black/60 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-yellow-400/50 placeholder:text-gray-700 w-64 transition-all"
+              />
+            </div>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value as any)}
-              className="bg-white/5 border border-white/10 rounded-xl py-2 px-3 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="bg-black/60 border border-white/10 rounded-2xl py-3 px-6 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-yellow-400/50 appearance-none cursor-pointer transition-all pr-12"
             >
-              <option value="ALL">All</option>
-              <option value="ACTIVE">Active</option>
-              <option value="TARGET_HIT">Target Hit</option>
-              <option value="CLOSED">Closed</option>
+              <option value="ALL">ALL STATUS</option>
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="TARGET_HIT">TARGET HIT</option>
+              <option value="CLOSED">CLOSED</option>
             </select>
           </div>
-        </div>
-      </header>
+        </motion.header>
 
-      <main className="max-w-6xl mx-auto relative z-10 pb-20 space-y-6">
-        {loading ? (
-          <div className="flex justify-center p-12">
-            <div className="w-8 h-8 border-2 border-blue-500/30 border-t-blue-500 rounded-full animate-spin" />
-          </div>
-        ) : error ? (
-          <div className="text-center p-12 bg-white/5 rounded-2xl border border-white/10">
-            <p className="text-red-400 font-medium">{error}</p>
-          </div>
-        ) : !data ? (
-          <div className="text-center p-12 bg-white/5 rounded-2xl border border-white/10">
-            <p className="text-gray-400">No analytics available.</p>
-          </div>
-        ) : (
-          <>
+        {data && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="space-y-12"
+          >
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard
-                label="Total Pitches"
+                label="Total Ops"
                 value={data.author.total_pitches}
-                icon={<Activity className="w-4 h-4 text-blue-400" />}
+                icon={<Activity />}
               />
               <StatCard
-                label="Active"
+                label="Active Streams"
                 value={data.author.active_pitches}
-                icon={<Clock3 className="w-4 h-4 text-amber-400" />}
+                icon={<Clock3 />}
               />
               <StatCard
-                label="Verified"
+                label="Verified Intel"
                 value={data.author.verified_pitches}
-                icon={<CheckCircle2 className="w-4 h-4 text-emerald-400" />}
+                icon={<ShieldCheck />}
               />
               <StatCard
-                label="Win Rate"
+                label="Accuracy Rating"
                 value={`${data.author.win_rate.toFixed(1)}%`}
-                icon={<Target className="w-4 h-4 text-fuchsia-400" />}
+                icon={<Target />}
               />
             </section>
 
-            <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
+            <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <StatCard
-                label="Average Alpha"
+                label="Avg Alpha Generation"
                 value={`${(data.author.avg_alpha * 100).toFixed(2)}%`}
-                icon={
-                  data.author.avg_alpha >= 0 ? (
-                    <TrendingUp className="w-4 h-4 text-emerald-400" />
-                  ) : (
-                    <TrendingDown className="w-4 h-4 text-rose-400" />
-                  )
-                }
+                trend={data.author.avg_alpha >= 0 ? "up" : "down"}
+                icon={<TrendingUp />}
               />
               <StatCard
-                label="Total Alpha"
+                label="Cumulative Alpha"
                 value={`${(data.author.total_alpha * 100).toFixed(2)}%`}
-                icon={
-                  data.author.total_alpha >= 0 ? (
-                    <TrendingUp className="w-4 h-4 text-emerald-400" />
-                  ) : (
-                    <TrendingDown className="w-4 h-4 text-rose-400" />
-                  )
-                }
+                trend={data.author.total_alpha >= 0 ? "up" : "down"}
+                icon={<BarChart3 />}
               />
             </section>
 
-            <section className="space-y-4">
-              <h2 className="text-xl font-bold">Your Pitch History</h2>
+            <section className="space-y-8">
+              <div className="flex items-center gap-4">
+                <div className="w-1 h-6 bg-yellow-400 rounded-full" />
+                <h2 className="text-2xl font-black uppercase italic tracking-tighter">Mission History</h2>
+              </div>
 
-              <AnimatePresence mode="popLayout">
-                {filteredPitches.length === 0 ? (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="text-center p-10 bg-white/5 rounded-2xl border border-white/10"
-                  >
-                    <p className="text-gray-400">
-                      No pitches match your filters.
-                    </p>
-                  </motion.div>
-                ) : (
-                  filteredPitches.map((pitch, idx) => (
-                    <motion.article
-                      key={pitch.id}
-                      initial={{ opacity: 0, y: 16 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.25, delay: idx * 0.04 }}
-                      className="bg-[#18181b]/80 backdrop-blur-md border border-white/10 rounded-2xl overflow-hidden hover:border-white/20 transition-all shadow-xl"
+              <div className="space-y-6">
+                <AnimatePresence mode="popLayout">
+                  {filteredPitches.length === 0 ? (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="text-center p-20 bg-black/40 rounded-[3rem] border border-white/5"
                     >
-                      <div className="p-6">
-                        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4 mb-4">
-                          <div className="flex items-start gap-4">
-                            <div className="bg-blue-500/20 border border-blue-500/30 text-blue-400 font-bold px-4 py-2 rounded-xl text-xl">
-                              ${pitch.ticker}
-                            </div>
-                            <div>
-                              <div className="text-sm text-gray-400">
-                                Posted {formatDate(pitch.created_at)}
+                      <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">
+                        Zero intelligence matches for active filters.
+                      </p>
+                    </motion.div>
+                  ) : (
+                    filteredPitches.map((pitch, idx) => (
+                      <motion.article
+                        key={pitch.id}
+                        initial={{ opacity: 0, y: 30 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
+                        className="bg-[#111114] border border-white/5 rounded-[2.5rem] overflow-hidden hover:border-yellow-400/20 transition-all shadow-2xl group"
+                      >
+                        <div className="p-10">
+                          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-8 mb-10">
+                            <div className="flex items-start gap-6">
+                              <div className="bg-yellow-400 p-4 rounded-2xl shadow-[0_0_20px_rgba(250,204,21,0.2)]">
+                                <span className="text-2xl font-black italic tracking-tighter text-black">${pitch.ticker}</span>
                               </div>
-                              <div className="text-xs mt-2 flex items-center gap-2">
-                                <Badge
-                                  tone={pitch.is_verified ? "emerald" : "amber"}
-                                >
-                                  {pitch.is_verified
-                                    ? "Verified"
-                                    : "Pending Verification"}
-                                </Badge>
-                                <Badge tone={statusTone(pitch.status)}>
-                                  {pitch.status}
-                                </Badge>
+                              <div className="space-y-2">
+                                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">
+                                  Deployed {formatDate(pitch.created_at)}
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <Badge
+                                    tone={pitch.is_verified ? "emerald" : "amber"}
+                                  >
+                                    {pitch.is_verified ? "SECURE_VERIFIED" : "PENDING_SCAN"}
+                                  </Badge>
+                                  <Badge tone={statusTone(pitch.status)}>
+                                    {pitch.status}
+                                  </Badge>
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          <div
-                            className={`flex items-center gap-1 font-semibold text-lg ${
-                              pitch.current_alpha >= 0
-                                ? "text-emerald-400"
-                                : "text-rose-400"
-                            }`}
-                          >
-                            {pitch.current_alpha >= 0 ? (
-                              <TrendingUp className="w-5 h-5" />
-                            ) : (
-                              <TrendingDown className="w-5 h-5" />
-                            )}
-                            {(pitch.current_alpha * 100).toFixed(2)}%
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
-                          <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-                            <div className="text-xs text-gray-400 mb-1">
-                              Entry Price
-                            </div>
-                            <div className="font-semibold">
-                              {pitch.entry_price != null
-                                ? `$${pitch.entry_price.toFixed(2)}`
-                                : "—"}
-                            </div>
-                          </div>
-                          <div className="bg-white/5 border border-white/10 rounded-xl p-3">
-                            <div className="text-xs text-gray-400 mb-1">
-                              Target Price
-                            </div>
-                            <div className="font-semibold">
-                              ${pitch.target_price.toFixed(2)}
-                            </div>
-                          </div>
-                        </div>
-
-                        <p className="text-gray-300 text-sm leading-relaxed mb-4 line-clamp-3">
-                          {pitch.content_body}
-                        </p>
-
-                        {pitch.deck_url && (
-                          <div className="space-y-3">
-                            <div className="rounded-xl overflow-hidden border border-white/10 bg-black/30">
-                              <div className="px-3 py-2 border-b border-white/10 text-xs uppercase tracking-wider text-gray-400 flex items-center gap-2">
-                                <FileText className="w-3.5 h-3.5" />
-                                Deck Preview
-                              </div>
-                              <iframe
-                                src={pitch.deck_url}
-                                title={`${pitch.ticker} deck preview`}
-                                className="w-full h-80 bg-white"
-                              />
-                            </div>
-
-                            <a
-                              href={pitch.deck_url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="inline-flex items-center gap-2 text-sm text-gray-300 hover:text-white transition-colors bg-white/5 px-3 py-1.5 rounded-lg border border-white/10"
+                            <div
+                              className={`flex items-center gap-3 font-black text-3xl italic tracking-tighter ${
+                                pitch.current_alpha >= 0
+                                  ? "text-emerald-400"
+                                  : "text-rose-400"
+                              }`}
                             >
-                              <Eye className="w-4 h-4" />
-                              Open Deck in New Tab
-                            </a>
+                              {pitch.current_alpha >= 0 ? (
+                                <TrendingUp className="w-8 h-8" />
+                              ) : (
+                                <TrendingDown className="w-8 h-8" />
+                              )}
+                              {(pitch.current_alpha * 100).toFixed(2)}%
+                            </div>
                           </div>
-                        )}
-                      </div>
-                    </motion.article>
-                  ))
-                )}
-              </AnimatePresence>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
+                            <div className="bg-black/40 border border-white/5 rounded-2xl p-6 group-hover:border-yellow-400/10 transition-colors">
+                              <div className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-1.5">
+                                Strike Entry
+                              </div>
+                              <div className="text-2xl font-black italic tracking-tighter text-white">
+                                {pitch.entry_price != null
+                                  ? `$${pitch.entry_price.toFixed(2)}`
+                                  : "—"}
+                              </div>
+                            </div>
+                            <div className="bg-black/40 border border-white/5 rounded-2xl p-6 group-hover:border-yellow-400/10 transition-colors">
+                              <div className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-1.5">
+                                Objective Target
+                              </div>
+                              <div className="text-2xl font-black italic tracking-tighter text-white">
+                                ${pitch.target_price.toFixed(2)}
+                              </div>
+                            </div>
+                          </div>
+
+                          <p className="text-gray-400 text-xs font-medium leading-relaxed mb-10 line-clamp-3 group-hover:line-clamp-none transition-all">
+                            {pitch.content_body}
+                          </p>
+
+                          {pitch.deck_url && (
+                            <div className="space-y-4 pt-10 border-t border-white/5">
+                              <div className="flex items-center justify-between mb-4 px-2">
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600">Attachment: Intelligence Artifact</div>
+                                <ShieldCheck className="w-4 h-4 text-yellow-400/50" />
+                              </div>
+                              <div className="max-w-xl">
+                                <PdfThumbnail url={pitch.deck_url} ticker={pitch.ticker} />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </motion.article>
+                    ))
+                  )}
+                </AnimatePresence>
+              </div>
             </section>
-          </>
+          </motion.div>
         )}
-      </main>
+      </div>
     </div>
   );
 }
@@ -340,18 +335,40 @@ function StatCard({
   label,
   value,
   icon,
+  trend
 }: {
   label: string;
   value: string | number;
   icon: React.ReactNode;
+  trend?: "up" | "down";
 }) {
   return (
-    <div className="bg-[#18181b]/80 border border-white/10 p-5 rounded-2xl flex flex-col justify-center">
-      <div className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2 flex items-center gap-2">
-        {icon} {label}
+    <motion.div 
+      whileHover={{ y: -5 }}
+      className="bg-[#111114] border border-white/5 p-8 rounded-[2rem] relative overflow-hidden group"
+    >
+      <div className="absolute top-0 right-0 w-32 h-32 bg-yellow-400/5 blur-[50px] rounded-full -mr-16 -mt-16 group-hover:bg-yellow-400/10 transition-colors" />
+      
+      <div className="flex items-center justify-between mb-6">
+        <div className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 group-hover:text-yellow-400 transition-colors">
+          {label}
+        </div>
+        <div className="text-gray-600 group-hover:text-yellow-400 transition-colors">
+          {icon}
+        </div>
       </div>
-      <div className="text-3xl font-bold text-gray-100">{value}</div>
-    </div>
+      
+      <div className="flex items-end justify-between">
+        <div className="text-3xl font-black italic tracking-tighter text-white">
+          {value}
+        </div>
+        {trend && (
+          <div className={`p-1.5 rounded-lg ${trend === 'up' ? 'bg-emerald-400/10 text-emerald-400' : 'bg-rose-400/10 text-rose-400'}`}>
+            {trend === 'up' ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
+          </div>
+        )}
+      </div>
+    </motion.div>
   );
 }
 
@@ -363,16 +380,16 @@ function Badge({
   tone: "emerald" | "amber" | "blue" | "gray" | "rose";
 }) {
   const styles = {
-    emerald: "bg-emerald-500/20 text-emerald-400 border-emerald-500/30",
-    amber: "bg-amber-500/20 text-amber-400 border-amber-500/30",
-    blue: "bg-blue-500/20 text-blue-400 border-blue-500/30",
-    gray: "bg-gray-500/20 text-gray-300 border-gray-500/30",
-    rose: "bg-rose-500/20 text-rose-400 border-rose-500/30",
+    emerald: "bg-emerald-400/5 text-emerald-400 border-emerald-400/20",
+    amber: "bg-yellow-400/5 text-yellow-500 border-yellow-400/20",
+    blue: "bg-yellow-400/5 text-yellow-400 border-yellow-400/20",
+    gray: "bg-white/5 text-gray-500 border-white/10",
+    rose: "bg-rose-400/5 text-rose-400 border-rose-400/20",
   }[tone];
 
   return (
     <span
-      className={`px-2 py-0.5 rounded-full border text-[10px] font-bold uppercase tracking-wider ${styles}`}
+      className={`px-3 py-1 rounded-lg border text-[8px] font-black uppercase tracking-widest ${styles}`}
     >
       {children}
     </span>

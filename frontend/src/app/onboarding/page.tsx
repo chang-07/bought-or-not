@@ -2,9 +2,8 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Link as LinkIcon, Building2, ArrowRight } from 'lucide-react';
+import { Link as LinkIcon, Building2, ArrowRight, ShieldCheck } from 'lucide-react';
 import axios from 'axios';
-import { useRouter } from 'next/navigation';
 
 export default function OnboardingPage() {
     const [loading, setLoading] = useState(false);
@@ -17,7 +16,7 @@ export default function OnboardingPage() {
         try {
             const baseURL = '';
             const res = await axios.post(`${baseURL}/api/snaptrade/connect`, {}, {
-                withCredentials: true, // Needs session cookies for Django Auth
+                withCredentials: true,
             });
 
             if (res.data.redirect_url) {
@@ -25,7 +24,7 @@ export default function OnboardingPage() {
             } else {
                 setError(res.data.error || 'Failed to generate SnapTrade URL');
             }
-        } catch (err: any) {
+        } catch (err: unknown) {
             setError('Connection error configuring brokerage.');
         } finally {
             setLoading(false);
@@ -34,42 +33,58 @@ export default function OnboardingPage() {
 
     return (
         <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-[#09090b]">
-            <div className="absolute top-[0%] left-[20%] w-[600px] h-[600px] rounded-full bg-emerald-600/10 blur-[150px]" />
-
-            <main className="w-full max-w-md p-6 relative z-10 text-center">
+            <main className="w-full max-w-md p-8 relative z-10 text-center">
                 <motion.div
-                    initial={{ opacity: 0, scale: 0.95 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="bg-[#18181b]/80 backdrop-blur-xl border border-white/10 rounded-3xl p-8 shadow-2xl"
+                    initial={{ opacity: 0, scale: 0.9, y: 20 }}
+                    animate={{ opacity: 1, scale: 1, y: 0 }}
+                    className="bg-[#111114] border border-white/10 rounded-[3rem] p-10 shadow-2xl relative overflow-hidden"
                 >
-                    <div className="inline-flex items-center justify-center w-20 h-20 rounded-[2rem] bg-gradient-to-br from-emerald-500 to-teal-700 shadow-2xl shadow-emerald-500/20 mb-6">
-                        <Building2 className="w-10 h-10 text-white" />
+                    <div className="absolute top-0 left-0 w-full h-1 bg-yellow-400" />
+                    
+                    <div className="inline-flex items-center justify-center w-24 h-24 rounded-[2.5rem] bg-yellow-400 shadow-[0_0_30px_rgba(250,204,21,0.2)] mb-10 group">
+                        <Building2 className="w-12 h-12 text-black transition-transform group-hover:scale-110" strokeWidth={2.5} />
                     </div>
 
-                    <h1 className="text-2xl font-bold text-white mb-3">Connect Brokerage</h1>
-                    <p className="text-gray-400 mb-8 text-sm">
-                        To publish verified pitches or one-click copy trade, VSPP requires read/write access to your portfolio.
+                    <h1 className="text-3xl font-black uppercase italic tracking-tighter mb-4 text-white">Initialize Node</h1>
+                    <p className="text-gray-500 mb-10 text-[10px] font-black uppercase tracking-widest leading-relaxed">
+                        To publish verified intel or execute copy trades, VSPP requires a secure linkage to your exchange protocol.
                     </p>
 
-                    {error && <p className="text-red-400 text-sm mb-4">{error}</p>}
+                    {error && (
+                        <motion.div 
+                            initial={{ opacity: 0, x: -10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="text-red-400 text-[10px] font-black uppercase tracking-widest mb-6 p-4 bg-red-400/5 border border-red-400/10 rounded-xl"
+                        >
+                            {error}
+                        </motion.div>
+                    )}
 
-                    <button
+                    <motion.button
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                         onClick={handleConnect}
                         disabled={loading}
-                        className="group w-full flex items-center justify-center gap-3 bg-white text-black font-semibold py-4 px-6 rounded-xl shadow-lg transition-transform active:scale-[0.98] disabled:opacity-70 hover:bg-gray-100"
+                        className="group w-full flex items-center justify-center gap-3 bg-yellow-400 hover:bg-yellow-300 text-black font-black py-5 px-8 rounded-2xl shadow-xl shadow-yellow-400/10 transition-all disabled:opacity-50 uppercase italic tracking-widest text-sm"
                     >
                         {loading ? (
-                            <div className="w-5 h-5 border-2 border-black/30 border-t-black rounded-full animate-spin" />
+                            <div className="w-6 h-6 border-3 border-black/20 border-t-black rounded-full animate-spin" />
                         ) : (
                             <>
-                                <LinkIcon className="w-5 h-5" />
-                                <span>Link via SnapTrade</span>
-                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform ml-auto" />
+                                <LinkIcon className="w-5 h-5" strokeWidth={3} />
+                                <span>Link Protocol</span>
+                                <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform ml-auto" />
                             </>
                         )}
-                    </button>
+                    </motion.button>
+                    
+                    <div className="mt-8 flex items-center justify-center gap-2 text-[8px] font-black text-gray-700 uppercase tracking-[0.3em]">
+                        <ShieldCheck className="w-3 h-3 text-yellow-500/50" />
+                        SnapTrade Encrypted Pipeline
+                    </div>
                 </motion.div>
             </main>
+            
         </div>
     );
 }

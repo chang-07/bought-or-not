@@ -137,6 +137,13 @@ CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:63
 CELERY_ACCEPT_CONTENT = ['json']
 CELERY_TASK_SERIALIZER = 'json'
 
+CELERY_BEAT_SCHEDULE = {
+    'update-alpha-scores-every-5-min': {
+        'task': 'core.tasks.update_alpha_scores',
+        'schedule': 300.0,  # every 5 minutes
+    },
+}
+
 # AWS S3 Configuration
 AWS_ACCESS_KEY_ID = os.getenv('AWS_ACCESS_KEY_ID')
 AWS_SECRET_ACCESS_KEY = os.getenv('AWS_SECRET_ACCESS_KEY')
