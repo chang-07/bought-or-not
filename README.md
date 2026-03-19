@@ -2,6 +2,8 @@
 
 Bought-or-Not is a high-performance, tactical stock pitching and portfolio tracking environment designed for institutional-grade visual clarity and split-second decision making. It bridges the gap between static stock slidedecks and live brokerage execution.
 
+<video src="goodx1.mp4" width="100%" controls loop muted autoplay></video>
+
 ## ⚡ Key Features
 
 ### 📡 Tactical Dashboard
@@ -12,6 +14,8 @@ Bought-or-Not is a high-performance, tactical stock pitching and portfolio track
 - **Alpha Tracking**: Live performance benchmarking against the SPY (S&P 500) using Finnhub integration.
 - **Visual PDFs**: First-slide preview system for all attached slidedecks with instantaneous download capability.
 
+<video src="goodx1.mp4" width="100%" controls loop muted autoplay></video>
+
 ### 📊 Intelligence Center (Portfolio)
 - **Live Sync**: Direct integration with primary brokerage accounts via SnapTrade API.
 - **Animated Analytics**: Performance visualizations powered by Recharts and Framer Motion:
@@ -19,6 +23,8 @@ Bought-or-Not is a high-performance, tactical stock pitching and portfolio track
     - **Asset Distribution**: Donut breakdown of holdings + liquid reserves.
     - **P&L Breakdown**: Granular unrealized gain/loss mapping per instrument.
 - **Quantum Trade Terminal**: Multi-step order execution with quantity selection and real-time impact evaluation.
+
+<video src="good-x3.mp4" width="100%" controls loop muted autoplay></video>
 
 ---
 
