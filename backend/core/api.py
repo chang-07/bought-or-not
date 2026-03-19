@@ -172,6 +172,43 @@ def snaptrade_connect(request):
 
 
 # ---------------------------------------------------------------------------
+# Stocks
+# ---------------------------------------------------------------------------
+
+@router.get("/stocks/search")
+def search_stocks(request, q: str = ""):
+    """
+    Search stocks by ticker/name for typeahead in the pitch form.
+    """
+    query = (q or "").strip()
+    if len(query) < 1:
+        return {"success": True, "results": []}
+
+    try:
+        symbols_raw = sdk_to_python(
+            snaptrade.reference_data.get_symbols(substring=query).body
+        ) or []
+
+        results = []
+        for s in symbols_raw[:20]:
+            ticker = str(s.get("symbol") or "")
+            description = str(s.get("description") or "")
+            symbol_id = str(s.get("id") or "")
+            if not ticker:
+                continue
+            results.append({
+                "id": symbol_id,
+                "ticker": ticker,
+                "name": description,
+                "label": f"{ticker} — {description}" if description else ticker,
+            })
+
+        return {"success": True, "results": results}
+    except Exception as e:
+        return {"success": False, "error": str(e), "results": []}
+
+
+# ---------------------------------------------------------------------------
 # Pitches
 # ---------------------------------------------------------------------------
 
