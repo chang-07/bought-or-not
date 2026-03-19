@@ -2,8 +2,6 @@
 
 VSPP is a high-performance, tactical stock pitching and portfolio tracking environment designed for institutional-grade visual clarity and split-second decision making. It bridges the gap between static stock slidedecks and live brokerage execution.
 
-![App Header](https://grainy-gradients.vercel.app/noise.svg)
-
 ## ⚡ Key Features
 
 ### 📡 Tactical Dashboard
