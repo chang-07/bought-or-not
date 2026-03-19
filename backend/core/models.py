@@ -36,9 +36,15 @@ class Pitch(models.Model):
 
 class PitchAttachment(models.Model):
     pitch = models.ForeignKey(Pitch, on_delete=models.CASCADE, related_name='attachments')
-    file_url = models.URLField(max_length=500)
-    file_type = models.CharField(max_length=50)
+    file_blob = models.BinaryField(null=True, blank=True)
+    file_name = models.CharField(max_length=255, blank=True, default='')
+    file_size_bytes = models.BigIntegerField(null=True, blank=True)
+    file_type = models.CharField(max_length=100)
     created_at = models.DateTimeField(auto_now_add=True)
+
+    @property
+    def resolved_url(self):
+        return None
 
     def __str__(self):
         return f"Attachment for {self.pitch.ticker}"

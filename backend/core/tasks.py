@@ -18,7 +18,11 @@ def verify_pitch_holdings(pitch_id: int):
         profile = pitch.author
 
         if not profile.snaptrade_secret or not profile.snaptrade_user_id:
-            pitch.status = 'CLOSED'
+            # Keep pitch visible while verification cannot run yet.
+            # Author can connect brokerage later and resubmit/reverify.
+            pitch.is_verified = False
+            if pitch.status != 'TARGET_HIT':
+                pitch.status = 'ACTIVE'
             pitch.save()
             return
 
@@ -82,7 +86,10 @@ def verify_pitch_holdings(pitch_id: int):
 
                 pitch.save()
             else:
-                pitch.status = 'CLOSED'  # Reject unverified pitches
+                # Keep unverified pitches visible in the feed.
+                pitch.is_verified = False
+                if pitch.status != 'TARGET_HIT':
+                    pitch.status = 'ACTIVE'
                 pitch.save()
 
         except Exception as e:

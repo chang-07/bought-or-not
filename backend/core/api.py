@@ -235,13 +235,12 @@ def create_pitch(request, payload: PitchCreateSchema, deck: UploadedFile = File(
     )
 
     if deck:
-        from django.core.files.storage import default_storage
-        file_path = default_storage.save(f"pitches/{pitch.id}/{deck.name}", deck)
-        file_url = default_storage.url(file_path)
         PitchAttachment.objects.create(
             pitch=pitch,
-            file_url=file_url,
-            file_type=deck.content_type,
+            file_blob=deck.read(),
+            file_name=str(getattr(deck, "name", "") or ""),
+            file_size_bytes=int(getattr(deck, "size", 0) or 0),
+            file_type=str(getattr(deck, "content_type", "") or "application/octet-stream"),
         )
 
     verify_pitch_holdings.delay(pitch.id)
@@ -256,19 +255,25 @@ class PitchResponseSchema(Schema):
     entry_price: float | None
     current_alpha: float
     status: str
+    is_verified: bool
+    is_mine: bool
     content_body: str
     deck_url: str | None
 
 
 @router.get("/pitches", response=list[PitchResponseSchema])
 def get_pitches(request, search: str = None):
-    pitches = Pitch.objects.filter(status='ACTIVE', is_verified=True).order_by('-created_at')
+    # Public feed: all ACTIVE pitches (verified and pending), newest first.
+    # This ensures newly uploaded pitches are visible immediately.
+    pitches = Pitch.objects.filter(status='ACTIVE').order_by('-created_at')
 
     if search:
-        pitches = (
-            pitches.filter(ticker__icontains=search)
-            | pitches.filter(author__user__username__icontains=search)
+        pitches = pitches.filter(
+            ticker__icontains=search
+        ) | pitches.filter(
+            author__user__username__icontains=search
         )
+        pitches = pitches.order_by('-created_at')
 
     response_data = []
     for p in pitches:
@@ -281,8 +286,12 @@ def get_pitches(request, search: str = None):
             "entry_price": _f(p.entry_price) if p.entry_price else None,
             "current_alpha": _f(p.current_alpha),
             "status": str(p.status),
+            "is_verified": bool(p.is_verified),
+            "is_mine": bool(
+                request.user.is_authenticated and p.author.user_id == request.user.id
+            ),
             "content_body": str(p.content_body),
-            "deck_url": str(attachment.file_url) if attachment else None,
+            "deck_url": None,
         })
 
     return response_data
@@ -498,6 +507,58 @@ def get_author_profile(request, username: str):
         }
     except User.DoesNotExist:
         return {"error": "Author not found"}
+
+
+# ---------------------------------------------------------------------------
+# My pitches + analytics (authenticated)
+# ---------------------------------------------------------------------------
+
+@router.get("/my/pitches")
+def get_my_pitches_analytics(request):
+    from django.db.models import Avg
+
+    if not request.user.is_authenticated:
+        return {"error": "Not authenticated"}
+
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    pitches = Pitch.objects.filter(author=profile).order_by('-created_at')
+
+    total_pitches = int(pitches.count())
+    active_pitches = int(pitches.filter(status='ACTIVE').count())
+    verified_pitches = int(pitches.filter(is_verified=True).count())
+    closed_pitches = int(pitches.exclude(status='ACTIVE').count())
+    win_count = int(pitches.filter(current_alpha__gt=0).count())
+
+    win_rate = (win_count / total_pitches * 100) if total_pitches > 0 else 0.0
+    avg_alpha = _f(pitches.aggregate(avg=Avg('current_alpha'))['avg'])
+
+    return {
+        "author": {
+            "username": str(request.user.username),
+            "total_pitches": total_pitches,
+            "active_pitches": active_pitches,
+            "verified_pitches": verified_pitches,
+            "closed_pitches": closed_pitches,
+            "win_rate": float(win_rate),
+            "avg_alpha": float(avg_alpha),
+            "total_alpha": _f(profile.total_alpha),
+        },
+        "pitches": [
+            {
+                "id": int(p.id),
+                "ticker": str(p.ticker),
+                "target_price": _f(p.target_price),
+                "entry_price": _f(p.entry_price) if p.entry_price else None,
+                "current_alpha": _f(p.current_alpha),
+                "status": str(p.status),
+                "is_verified": bool(p.is_verified),
+                "content_body": str(p.content_body),
+                "created_at": p.created_at.isoformat(),
+                "deck_url": None,
+            }
+            for p in pitches
+        ],
+    }
 
 
 # ---------------------------------------------------------------------------
