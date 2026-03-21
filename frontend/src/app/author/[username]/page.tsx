@@ -6,10 +6,12 @@ export default async function AuthorProfilePage({ params }: { params: Promise<{ 
   const sessionToken = cookieStore.get("sessionid")?.value;
   const username = (await params).username;
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+
   let initialProfile = { author: null, pitches: [], error: "" };
 
   try {
-    const res = await fetch(`http://127.0.0.1:8000/api/author/${username}`, {
+    const res = await fetch(`${API_URL}/api/author/${username}`, {
       headers: {
         Cookie: `sessionid=${sessionToken}`,
       },

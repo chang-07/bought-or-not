@@ -8,11 +8,13 @@ export default async function PortfolioPage() {
   let initialPortfolio = { success: false, portfolio: [] };
   let initialSnapshots = [];
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+
   try {
     const headers = { Cookie: `sessionid=${sessionToken}` };
     const [portRes, histRes] = await Promise.all([
-      fetch("http://127.0.0.1:8000/api/portfolio", { headers, cache: "no-store" }),
-      fetch("http://127.0.0.1:8000/api/portfolio/history", { headers, cache: "no-store" }).catch(() => null)
+      fetch(`${API_URL}/api/portfolio`, { headers, cache: "no-store" }),
+      fetch(`${API_URL}/api/portfolio/history`, { headers, cache: "no-store" }).catch(() => null)
     ]);
 
     if (portRes.ok) initialPortfolio = await portRes.json();

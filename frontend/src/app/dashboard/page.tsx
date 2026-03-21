@@ -5,9 +5,11 @@ export default async function DashboardPage() {
   const cookieStore = await cookies();
   const sessionToken = cookieStore.get("sessionid")?.value;
 
+  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+
   let initialPitches = [];
   try {
-    const res = await fetch("http://127.0.0.1:8000/api/pitches", {
+    const res = await fetch(`${API_URL}/api/pitches`, {
       headers: {
         Cookie: `sessionid=${sessionToken}`,
       },
