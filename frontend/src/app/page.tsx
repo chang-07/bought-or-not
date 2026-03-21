@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, Lock, Mail, User as UserIcon, ArrowRight, ShieldCheck } from 'lucide-react';
-import axios from 'axios';
+import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 
 export default function AuthPage() {
   const [isLogin, setIsLogin] = useState(true);
@@ -26,11 +28,7 @@ export default function AuthPage() {
 
     try {
       const endpoint = isLogin ? '/api/login' : '/api/signup';
-      const baseURL = '';
-
-      const res = await axios.post(`${baseURL}${endpoint}`, formData, {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const res = await api.post(endpoint, formData);
 
       if (res.data.success) {
         if (!res.data.snaptrade_connected) {
@@ -41,7 +39,7 @@ export default function AuthPage() {
       } else {
         setError(isLogin ? 'Invalid credentials' : 'Username already exists');
       }
-    } catch (err: unknown) {
+    } catch {
       setError('Connection error to server.');
     } finally {
       setLoading(false);
@@ -125,44 +123,36 @@ export default function AuthPage() {
                   initial={{ opacity: 0, height: 0 }}
                   animate={{ opacity: 1, height: 'auto' }}
                   exit={{ opacity: 0, height: 0 }}
-                  className="relative"
                 >
-                  <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-                  <input
+                  <Input
                     type="email"
                     placeholder="Email address"
                     required={!isLogin}
                     value={formData.email}
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all font-medium"
+                    icon={<Mail className="w-5 h-5" />}
                   />
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <div className="relative">
-              <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input
-                type="text"
-                placeholder="Username"
-                required
-                value={formData.username}
-                onChange={(e) => setFormData({ ...formData, username: e.target.value })}
-                className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all font-medium"
-              />
-            </div>
+            <Input
+              type="text"
+              placeholder="Username"
+              required
+              value={formData.username}
+              onChange={(e) => setFormData({ ...formData, username: e.target.value })}
+              icon={<UserIcon className="w-5 h-5" />}
+            />
 
-            <div className="relative">
-              <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
-              <input
-                type="password"
-                placeholder="Password"
-                required
-                value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                className="w-full bg-black/60 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-yellow-400/50 transition-all font-medium"
-              />
-            </div>
+            <Input
+              type="password"
+              placeholder="Password"
+              required
+              value={formData.password}
+              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              icon={<Lock className="w-5 h-5" />}
+            />
 
             {error && (
               <motion.p
@@ -173,12 +163,11 @@ export default function AuthPage() {
               </motion.p>
             )}
 
-            <motion.button
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+            <Button
               type="submit"
               disabled={loading}
-              className="group relative w-full flex items-center justify-center gap-2 bg-yellow-400 hover:bg-yellow-300 text-black font-extrabold py-4 px-4 rounded-2xl shadow-xl shadow-yellow-400/20 transition-all disabled:opacity-70 mt-4 h-14"
+              className="w-full h-14 mt-4 text-sm"
+              variant="primary"
             >
               {loading ? (
                 <div className="w-6 h-6 border-3 border-black/20 border-t-black rounded-full animate-spin" />
@@ -188,7 +177,7 @@ export default function AuthPage() {
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
                 </>
               )}
-            </motion.button>
+            </Button>
           </form>
 
           <motion.div 

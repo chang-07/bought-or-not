@@ -2,8 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileUp, Send, TrendingUp, AlertCircle, RefreshCw, ChevronRight, ShieldCheck } from "lucide-react";
-import axios from "axios";
+import { FileUp, AlertCircle, RefreshCw, ChevronRight, ShieldCheck } from "lucide-react";
+import api from "@/lib/api";
 import { useRouter } from "next/navigation";
 
 type StockSearchResult = {
@@ -56,11 +56,7 @@ export default function NewPitchPage() {
     const timer = setTimeout(async () => {
       try {
         setSearching(true);
-        const baseURL = "";
-        const res = await axios.get(`${baseURL}/api/stocks/search`, {
-          params: { q },
-          withCredentials: true,
-        });
+        const res = await api.get("/api/stocks/search", { params: { q } });
 
         if (res.data?.success) {
           const results: StockSearchResult[] = Array.isArray(res.data.results)
@@ -153,7 +149,6 @@ export default function NewPitchPage() {
     }
 
     try {
-      const baseURL = "";
       const payload = new FormData();
       payload.append(
         "payload",
@@ -165,8 +160,7 @@ export default function NewPitchPage() {
       );
       payload.append("deck", file);
 
-      const res = await axios.post(`${baseURL}/api/pitches`, payload, {
-        withCredentials: true,
+      const res = await api.post("/api/pitches", payload, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

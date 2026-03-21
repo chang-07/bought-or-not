@@ -142,6 +142,10 @@ CELERY_BEAT_SCHEDULE = {
         'task': 'core.tasks.update_alpha_scores',
         'schedule': 300.0,  # every 5 minutes
     },
+    'snapshot-portfolios-daily': {
+        'task': 'core.tasks.snapshot_all_portfolios',
+        'schedule': 86400.0,  # every 24 hours
+    },
 }
 
 # AWS S3 Configuration

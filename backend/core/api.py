@@ -9,8 +9,12 @@ from .models import UserProfile, Pitch, PitchAttachment
 from .tasks import verify_pitch_holdings, update_alpha_scores
 import os
 import uuid
-from snaptrade_client import SnapTrade  # type: ignore
-from snaptrade_client.schemas import NoneClass, BoolClass, Unset  # type: ignore
+try:
+    from snaptrade_client import SnapTrade  # type: ignore
+    from snaptrade_client.schemas import NoneClass, BoolClass, Unset  # type: ignore
+except ImportError:
+    SnapTrade = type('SnapTrade', (object,), {'__new__': lambda cls, **k: None})
+    NoneClass = BoolClass = Unset = type('Missing', (), {})
 
 
 def sdk_to_python(obj):
@@ -264,8 +268,15 @@ class PitchResponseSchema(Schema):
 @router.get("/pitches", response=list[PitchResponseSchema])
 def get_pitches(request, search: str = None):
     # Public feed: all ACTIVE pitches (verified and pending), newest first.
-    # This ensures newly uploaded pitches are visible immediately.
-    pitches = Pitch.objects.filter(status='ACTIVE').order_by('-created_at')
+    pitches = Pitch.objects.select_related('author__user').prefetch_related('pitchattachment_set').filter(status='ACTIVE').order_by('-created_at')
+
+    if request.user.is_authenticated:
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            pitches = pitches.exclude(hidden_by__user=profile)
+        except UserProfile.DoesNotExist:
+            pass
+
 
     if search:
         pitches = pitches.filter(
@@ -295,6 +306,31 @@ def get_pitches(request, search: str = None):
         })
 
     return response_data
+
+@router.post("/pitches/{pitch_id}/hide")
+def hide_pitch(request, pitch_id: int):
+    if not request.user.is_authenticated:
+        return {"error": "Not authenticated"}
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+        pitch = Pitch.objects.get(id=pitch_id)
+        from .models import HiddenPitch
+        HiddenPitch.objects.get_or_create(user=profile, pitch=pitch)
+        return {"success": True}
+    except Exception as e:
+        return {"error": str(e)}
+
+@router.post("/pitches/restore_all")
+def restore_all_pitches(request):
+    if not request.user.is_authenticated:
+        return {"error": "Not authenticated"}
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+        from .models import HiddenPitch
+        HiddenPitch.objects.filter(user=profile).delete()
+        return {"success": True}
+    except Exception as e:
+        return {"error": str(e)}
 
 
 # ---------------------------------------------------------------------------
@@ -478,7 +514,7 @@ def get_author_profile(request, username: str):
     try:
         user = User.objects.get(username=username)
         # author is a FK to UserProfile; filter via author__user
-        pitches = Pitch.objects.filter(author__user=user).order_by('-created_at')
+        pitches = Pitch.objects.select_related('author__user').prefetch_related('pitchattachment_set').filter(author__user=user).order_by('-created_at')
 
         total_pitches = int(pitches.count())
         win_count = int(pitches.filter(current_alpha__gt=0).count())
@@ -521,7 +557,7 @@ def get_my_pitches_analytics(request):
         return {"error": "Not authenticated"}
 
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    pitches = Pitch.objects.filter(author=profile).order_by('-created_at')
+    pitches = Pitch.objects.select_related('author__user').prefetch_related('pitchattachment_set').filter(author=profile).order_by('-created_at')
 
     total_pitches = int(pitches.count())
     active_pitches = int(pitches.filter(status='ACTIVE').count())
@@ -754,8 +790,8 @@ def refresh_alpha(request):
         return {"error": "Not authenticated"}
 
     try:
-        update_alpha_scores()
-        return {"success": True, "message": "Alpha scores refreshed via Finnhub"}
+        update_alpha_scores.delay()
+        return {"success": True, "message": "Alpha scores dispatched for background refresh via Finnhub"}
     except Exception as e:
         return {"error": str(e)}
 
@@ -846,10 +882,15 @@ def get_portfolio_history(request):
             except Exception as e:
                 print(f"Activities unavailable for {acc_id}: {e}")
 
+        from .models import PortfolioSnapshot
+        snapshots = PortfolioSnapshot.objects.filter(user=profile).order_by('date')
+        snapshot_data = [{"date": s.date.isoformat(), "value": _f(s.total_value)} for s in snapshots]
+
         return {
             "success": True,
             "return_rates": all_return_rates,
             "activities": all_activities,
+            "snapshots": snapshot_data,
         }
 
     except Exception as e:

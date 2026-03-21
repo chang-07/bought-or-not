@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertTriangle, ShieldCheck, CheckCircle2, TrendingUp, ChevronRight, Minus, Plus } from 'lucide-react';
-import axios from 'axios';
+import api from '@/lib/api';
+import { Button } from '@/components/ui/Button';
 
 type TradeModalProps = {
     isOpen: boolean;
@@ -43,9 +44,7 @@ export default function TradeModal({ isOpen, onClose, pitchId, ticker }: TradeMo
         setError('');
 
         try {
-            const res = await axios.get(`/api/trade/impact/${pitchId}`, {
-                withCredentials: true
-            });
+            const res = await api.get(`/api/trade/impact/${pitchId}`);
 
             if (res.data.success) {
                 setImpactData(res.data.impact);
@@ -67,11 +66,9 @@ export default function TradeModal({ isOpen, onClose, pitchId, ticker }: TradeMo
         setError('');
 
         try {
-            const res = await axios.post(`/api/trade/execute/${pitchId}`, {
+            const res = await api.post(`/api/trade/execute/${pitchId}`, {
                 account_id: accountId,
                 units: units
-            }, {
-                withCredentials: true
             });
 
             if (res.data.success) {
@@ -236,15 +233,13 @@ export default function TradeModal({ isOpen, onClose, pitchId, ticker }: TradeMo
                                             </div>
 
                                             {/* Evaluate Button */}
-                                            <motion.button
-                                                whileHover={{ scale: 1.02, x: 5 }}
-                                                whileTap={{ scale: 0.98 }}
+                                            <Button
                                                 onClick={fetchImpact}
-                                                className="group w-full bg-yellow-400 hover:bg-yellow-300 text-black font-black py-5 px-6 rounded-2xl shadow-xl shadow-yellow-400/10 transition-all uppercase italic tracking-widest text-sm flex items-center justify-center gap-3"
+                                                className="w-full"
                                             >
                                                 Evaluate {units} Share{units !== 1 ? 's' : ''}
                                                 <ChevronRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
-                                            </motion.button>
+                                            </Button>
                                         </motion.div>
                                     )}
 
@@ -280,14 +275,13 @@ export default function TradeModal({ isOpen, onClose, pitchId, ticker }: TradeMo
                                                     <p className="text-xs font-medium leading-relaxed opacity-80">{error}</p>
                                                 </div>
                                             </div>
-                                            <motion.button
-                                                whileHover={{ scale: 1.02 }}
-                                                whileTap={{ scale: 0.98 }}
+                                            <Button
+                                                variant="ghost"
                                                 onClick={() => setStep('quantity')}
-                                                className="w-full border border-white/10 text-gray-400 font-black py-4 px-6 rounded-2xl hover:bg-white/5 transition-all uppercase italic tracking-widest text-xs"
+                                                className="w-full mt-4"
                                             >
                                                 Back to Quantity
-                                            </motion.button>
+                                            </Button>
                                         </motion.div>
                                     )}
 
@@ -344,21 +338,17 @@ export default function TradeModal({ isOpen, onClose, pitchId, ticker }: TradeMo
                                             </div>
 
                                             <div className="flex gap-3">
-                                                <motion.button
-                                                    whileHover={{ scale: 1.02 }}
-                                                    whileTap={{ scale: 0.98 }}
+                                                <Button
+                                                    variant="ghost"
                                                     onClick={() => setStep('quantity')}
                                                     disabled={executing}
-                                                    className="border border-white/10 text-gray-400 font-black py-5 px-6 rounded-2xl hover:bg-white/5 transition-all uppercase italic tracking-widest text-xs disabled:opacity-30"
                                                 >
                                                     Back
-                                                </motion.button>
-                                                <motion.button
-                                                    whileHover={{ scale: 1.02, x: 5 }}
-                                                    whileTap={{ scale: 0.98 }}
+                                                </Button>
+                                                <Button
                                                     onClick={handleExecute}
                                                     disabled={executing}
-                                                    className="group flex-1 bg-yellow-400 hover:bg-yellow-300 text-black font-black py-5 px-6 rounded-2xl shadow-xl shadow-yellow-400/10 transition-all disabled:opacity-50 uppercase italic tracking-widest text-sm flex items-center justify-center gap-3"
+                                                    className="flex-1"
                                                 >
                                                     {executing ? (
                                                         <div className="w-6 h-6 border-3 border-black/20 border-t-black rounded-full animate-spin" />
@@ -368,7 +358,7 @@ export default function TradeModal({ isOpen, onClose, pitchId, ticker }: TradeMo
                                                             <ChevronRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform" />
                                                         </>
                                                     )}
-                                                </motion.button>
+                                                </Button>
                                             </div>
                                         </motion.div>
                                     )}
