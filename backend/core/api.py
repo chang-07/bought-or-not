@@ -268,7 +268,7 @@ class PitchResponseSchema(Schema):
 @router.get("/pitches", response=list[PitchResponseSchema])
 def get_pitches(request, search: str = None):
     # Public feed: all ACTIVE pitches (verified and pending), newest first.
-    pitches = Pitch.objects.filter(status='ACTIVE').order_by('-created_at')
+    pitches = Pitch.objects.select_related('author__user').prefetch_related('pitchattachment_set').filter(status='ACTIVE').order_by('-created_at')
 
     if request.user.is_authenticated:
         try:
@@ -514,7 +514,7 @@ def get_author_profile(request, username: str):
     try:
         user = User.objects.get(username=username)
         # author is a FK to UserProfile; filter via author__user
-        pitches = Pitch.objects.filter(author__user=user).order_by('-created_at')
+        pitches = Pitch.objects.select_related('author__user').prefetch_related('pitchattachment_set').filter(author__user=user).order_by('-created_at')
 
         total_pitches = int(pitches.count())
         win_count = int(pitches.filter(current_alpha__gt=0).count())
@@ -557,7 +557,7 @@ def get_my_pitches_analytics(request):
         return {"error": "Not authenticated"}
 
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    pitches = Pitch.objects.filter(author=profile).order_by('-created_at')
+    pitches = Pitch.objects.select_related('author__user').prefetch_related('pitchattachment_set').filter(author=profile).order_by('-created_at')
 
     total_pitches = int(pitches.count())
     active_pitches = int(pitches.filter(status='ACTIVE').count())

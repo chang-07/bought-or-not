@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link as LinkIcon, Building2, ArrowRight, ShieldCheck } from 'lucide-react';
 import api from '@/lib/api';
+import { Button } from '@/components/ui/Button';
 
 export default function OnboardingPage() {
     const [loading, setLoading] = useState(false);
@@ -57,12 +58,10 @@ export default function OnboardingPage() {
                         </motion.div>
                     )}
 
-                    <motion.button
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
+                    <Button
                         onClick={handleConnect}
                         disabled={loading}
-                        className="group w-full flex items-center justify-center gap-3 bg-yellow-400 hover:bg-yellow-300 text-black font-black py-5 px-8 rounded-2xl shadow-xl shadow-yellow-400/10 transition-all disabled:opacity-50 uppercase italic tracking-widest text-sm"
+                        className="w-full mt-4"
                     >
                         {loading ? (
                             <div className="w-6 h-6 border-3 border-black/20 border-t-black rounded-full animate-spin" />
@@ -73,7 +72,7 @@ export default function OnboardingPage() {
                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform ml-auto" />
                             </>
                         )}
-                    </motion.button>
+                    </Button>
                     
                     <div className="mt-8 flex items-center justify-center gap-2 text-[8px] font-black text-gray-700 uppercase tracking-[0.3em]">
                         <ShieldCheck className="w-3 h-3 text-yellow-500/50" />
