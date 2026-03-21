@@ -5,16 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
   BarChart3,
-  CheckCircle2,
   Clock3,
   Target,
   TrendingDown,
   TrendingUp,
-  Eye,
-  FileText,
   Search,
   ShieldCheck,
-  ChevronRight,
 } from "lucide-react";
 import axios from "axios";
 import dynamic from "next/dynamic";
@@ -51,6 +47,7 @@ type MyPitchAnalytics = {
 export default function MyPitchesPage() {
   const [data, setData] = useState<MyPitchAnalytics | null>(null);
   const [loading, setLoading] = useState(true);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [error, setError] = useState("");
 
   const [statusFilter, setStatusFilter] = useState<
@@ -162,7 +159,7 @@ export default function MyPitchesPage() {
             </div>
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value as any)}
+              onChange={(e) => setStatusFilter(e.target.value as "ALL" | "ACTIVE" | "CLOSED" | "TARGET_HIT")}
               className="bg-black/60 border border-white/10 rounded-2xl py-3 px-6 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-yellow-400/50 appearance-none cursor-pointer transition-all pr-12"
             >
               <option value="ALL">ALL STATUS</option>

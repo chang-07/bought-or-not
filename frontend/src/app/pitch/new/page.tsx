@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { FileUp, Send, TrendingUp, AlertCircle, RefreshCw, ChevronRight, ShieldCheck } from "lucide-react";
+import { FileUp, AlertCircle, RefreshCw, ChevronRight, ShieldCheck } from "lucide-react";
 import axios from "axios";
 import { useRouter } from "next/navigation";
 

@@ -41,7 +41,7 @@ export default function AuthPage() {
       } else {
         setError(isLogin ? 'Invalid credentials' : 'Username already exists');
       }
-    } catch (err: unknown) {
+    } catch {
       setError('Connection error to server.');
     } finally {
       setLoading(false);

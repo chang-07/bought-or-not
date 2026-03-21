@@ -64,6 +64,7 @@ const itemVariants = {
 };
 
 // Custom tooltip for area chart
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function ValueTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null;
   return (
@@ -79,6 +80,7 @@ function ValueTooltip({ active, payload, label }: any) {
 }
 
 // Custom tooltip for bar chart
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 function PnlTooltip({ active, payload }: any) {
   if (!active || !payload?.length) return null;
   const val = payload[0].value;
@@ -142,9 +144,10 @@ export default function PortfolioCharts({
     for (let i = days; i >= 0; i--) {
       const date = new Date(now);
       date.setDate(now.getDate() - i);
-      // Simulate natural market movement with slight randomness
+      // Simulate natural market movement with deterministic pseudo-randomness
       const dayFactor = 1 + (Math.sin(i * 0.5) * 0.02) + ((days - i) * 0.001);
-      const noise = 1 + (Math.random() - 0.5) * 0.01;
+      const pseudoRandom = Math.abs(Math.sin(i * 12.9898 + totalValue)) % 1;
+      const noise = 1 + (pseudoRandom - 0.5) * 0.01;
       const value = totalValue * dayFactor * noise * 0.95;
 
       data.push({

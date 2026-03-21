@@ -14,6 +14,7 @@ interface PdfThumbnailProps {
 }
 
 export default function PdfThumbnail({ url, ticker }: PdfThumbnailProps) {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [numPages, setNumPages] = useState<number>();
 
   function onDocumentLoadSuccess({ numPages }: { numPages: number }) {

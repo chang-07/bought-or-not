@@ -24,7 +24,7 @@ export default function OnboardingPage() {
             } else {
                 setError(res.data.error || 'Failed to generate SnapTrade URL');
             }
-        } catch (err: unknown) {
+        } catch {
             setError('Connection error configuring brokerage.');
         } finally {
             setLoading(false);

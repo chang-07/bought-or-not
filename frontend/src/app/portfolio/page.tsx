@@ -12,9 +12,7 @@ import {
   TrendingUp,
   Activity,
   Target,
-  ArrowRight,
   ShieldCheck,
-  ChevronRight,
   ExternalLink,
 } from "lucide-react";
 import axios from "axios";
