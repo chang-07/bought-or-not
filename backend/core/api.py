@@ -241,7 +241,7 @@ def create_pitch(request, payload: PitchCreateSchema, deck: UploadedFile = File(
     if deck:
         attachment = PitchAttachment.objects.create(
             pitch=pitch,
-            file_blob=deck.read(),
+            file=deck,
             file_name=str(getattr(deck, "name", "") or ""),
             file_size_bytes=int(getattr(deck, "size", 0) or 0),
             file_type=str(getattr(deck, "content_type", "") or "application/octet-stream"),
