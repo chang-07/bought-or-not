@@ -790,8 +790,8 @@ def refresh_alpha(request):
         return {"error": "Not authenticated"}
 
     try:
-        update_alpha_scores()
-        return {"success": True, "message": "Alpha scores refreshed via Finnhub"}
+        update_alpha_scores.delay()
+        return {"success": True, "message": "Alpha scores dispatched for background refresh via Finnhub"}
     except Exception as e:
         return {"error": str(e)}
 
