@@ -15,7 +15,7 @@ import {
   ShieldCheck,
   ExternalLink,
 } from "lucide-react";
-import axios from "axios";
+import api from "@/lib/api";
 import dynamic from "next/dynamic";
 
 const PortfolioCharts = dynamic(() => import("@/components/PortfolioCharts"), {
@@ -109,9 +109,7 @@ export default function PortfolioPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await axios.get<PortfolioResponse>("/api/portfolio", {
-        withCredentials: true,
-      });
+      const res = await api.get<PortfolioResponse>("/api/portfolio");
 
       if (!res.data?.success) {
         setError(res.data?.error || "Failed to fetch portfolio data.");
@@ -166,15 +164,11 @@ export default function PortfolioPage() {
   ) => {
     setSellState({ symbol, status: "loading" });
     try {
-      const res = await axios.post(
-        "/api/trade/sell",
-        {
-          account_id: accountId,
-          symbol,
-          units,
-        },
-        { withCredentials: true },
-      );
+      const res = await api.post("/api/trade/sell", {
+        account_id: accountId,
+        symbol,
+        units,
+      });
 
       if (res.data?.success) {
         setSellState({ symbol, status: "success" });
@@ -193,13 +187,7 @@ export default function PortfolioPage() {
   const handleManageBrokerages = async () => {
     setManageLoading(true);
     try {
-      const res = await axios.post(
-        "/api/snaptrade/connect",
-        {},
-        {
-          withCredentials: true,
-        },
-      );
+      const res = await api.post("/api/snaptrade/connect");
 
       if (res.data?.redirect_url) {
         window.location.href = res.data.redirect_url;

@@ -11,7 +11,7 @@ import {
   Target,
   Activity,
 } from "lucide-react";
-import axios from "axios";
+import api from "@/lib/api";
 import { useParams } from "next/navigation";
 import TradeModal from "@/components/TradeModal";
 import dynamic from 'next/dynamic';
@@ -53,10 +53,7 @@ export default function AuthorProfilePage() {
   useEffect(() => {
     const fetchProfile = async () => {
       try {
-        const baseURL = "";
-        const res = await axios.get(`${baseURL}/api/author/${username}`, {
-          withCredentials: true,
-        });
+        const res = await api.get(`/api/author/${username}`);
         if (res.data.author) {
           setAuthorData(res.data.author);
           setPitches(res.data.pitches);

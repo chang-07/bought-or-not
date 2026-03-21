@@ -10,7 +10,7 @@ import {
   DollarSign,
   RefreshCw,
 } from "lucide-react";
-import axios from "axios";
+import api from "@/lib/api";
 import TradeModal from "@/components/TradeModal";
 import dynamic from 'next/dynamic';
 
@@ -64,13 +64,7 @@ export default function DashboardPage() {
   const fetchPitches = async (query = "") => {
     setLoading(true);
     try {
-      const baseURL = "";
-      const res = await axios.get(
-        `${baseURL}/api/pitches${query ? `?search=${query}` : ""}`,
-        {
-          withCredentials: true,
-        },
-      );
+      const res = await api.get(`/api/pitches${query ? `?search=${query}` : ""}`);
       setPitches(res.data);
     } catch (err) {
       console.error("Failed to fetch pitches", err);
@@ -83,7 +77,7 @@ export default function DashboardPage() {
   const refreshAlpha = async () => {
     setRefreshing(true);
     try {
-      await axios.post('/api/alpha/refresh', {}, { withCredentials: true });
+      await api.post('/api/alpha/refresh');
       await fetchPitches(search);
     } catch (err) {
       console.error('Failed to refresh alpha', err);

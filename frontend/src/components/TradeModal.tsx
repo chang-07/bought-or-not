@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, AlertTriangle, ShieldCheck, CheckCircle2, TrendingUp, ChevronRight, Minus, Plus } from 'lucide-react';
-import axios from 'axios';
+import api from '@/lib/api';
 
 type TradeModalProps = {
     isOpen: boolean;
@@ -43,9 +43,7 @@ export default function TradeModal({ isOpen, onClose, pitchId, ticker }: TradeMo
         setError('');
 
         try {
-            const res = await axios.get(`/api/trade/impact/${pitchId}`, {
-                withCredentials: true
-            });
+            const res = await api.get(`/api/trade/impact/${pitchId}`);
 
             if (res.data.success) {
                 setImpactData(res.data.impact);
@@ -67,11 +65,9 @@ export default function TradeModal({ isOpen, onClose, pitchId, ticker }: TradeMo
         setError('');
 
         try {
-            const res = await axios.post(`/api/trade/execute/${pitchId}`, {
+            const res = await api.post(`/api/trade/execute/${pitchId}`, {
                 account_id: accountId,
                 units: units
-            }, {
-                withCredentials: true
             });
 
             if (res.data.success) {

@@ -12,7 +12,7 @@ import {
   Search,
   ShieldCheck,
 } from "lucide-react";
-import axios from "axios";
+import api from "@/lib/api";
 import dynamic from "next/dynamic";
 
 const PdfThumbnail = dynamic(() => import("@/components/PdfThumbnail"), { ssr: false });
@@ -60,10 +60,7 @@ export default function MyPitchesPage() {
       setLoading(true);
       setError("");
       try {
-        const baseURL = "";
-        const res = await axios.get(`${baseURL}/api/my/pitches`, {
-          withCredentials: true,
-        });
+        const res = await api.get("/api/my/pitches");
 
         if (res.data?.error) {
           setError(res.data.error);

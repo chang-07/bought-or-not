@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, Lock, Mail, User as UserIcon, ArrowRight, ShieldCheck } from 'lucide-react';
-import axios from 'axios';
+import api from '@/lib/api';
 import { useRouter } from 'next/navigation';
 
 export default function AuthPage() {
@@ -26,11 +26,7 @@ export default function AuthPage() {
 
     try {
       const endpoint = isLogin ? '/api/login' : '/api/signup';
-      const baseURL = '';
-
-      const res = await axios.post(`${baseURL}${endpoint}`, formData, {
-        headers: { 'Content-Type': 'application/json' },
-      });
+      const res = await api.post(endpoint, formData);
 
       if (res.data.success) {
         if (!res.data.snaptrade_connected) {

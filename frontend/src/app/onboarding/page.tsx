@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link as LinkIcon, Building2, ArrowRight, ShieldCheck } from 'lucide-react';
-import axios from 'axios';
+import api from '@/lib/api';
 
 export default function OnboardingPage() {
     const [loading, setLoading] = useState(false);
@@ -14,10 +14,7 @@ export default function OnboardingPage() {
         setError('');
 
         try {
-            const baseURL = '';
-            const res = await axios.post(`${baseURL}/api/snaptrade/connect`, {}, {
-                withCredentials: true,
-            });
+            const res = await api.post('/api/snaptrade/connect');
 
             if (res.data.redirect_url) {
                 window.location.href = res.data.redirect_url;
