@@ -119,7 +119,7 @@ export default function TopNav() {
                   className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl transition-all duration-300 relative overflow-hidden text-rose-500/80 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20"
                 >
                   <LogOut className="w-4 h-4 transition-transform group-hover:scale-110 stroke-2" />
-                  <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest italic">Abort Sync</span>
+                  <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest italic">Log Out</span>
                 </motion.div>
               </button>
             </div>

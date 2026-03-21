@@ -96,7 +96,7 @@ export default function MyPitchesClient({ initialData }: { initialData: MyPitchA
       <div className="min-h-screen bg-[#09090b] bg-grid-vertical flex justify-center items-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-yellow-400/20 border-t-yellow-400 rounded-full animate-spin" />
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 animate-pulse">Syncing Pitch Intel...</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 animate-pulse">Loading Pitches...</span>
         </div>
       </div>
     );
@@ -128,11 +128,11 @@ export default function MyPitchesClient({ initialData }: { initialData: MyPitchA
             <div className="flex items-center gap-3">
               <div className="w-1.5 h-8 bg-yellow-400 rounded-full shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
               <h1 className="text-4xl font-black uppercase italic tracking-tighter">
-                Intelligence Brief
+                My Pitches
               </h1>
             </div>
             <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] max-w-xl leading-relaxed">
-              Track your deployed theses and monitor performance synchronization across global equity nodes.
+              Track your pitches and monitor overall performance.
             </p>
           </div>
 
@@ -141,7 +141,7 @@ export default function MyPitchesClient({ initialData }: { initialData: MyPitchA
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 group-focus-within:text-yellow-400 transition-colors" />
               <input
                 type="text"
-                placeholder="FILTER INTEL..."
+                placeholder="SEARCH PITCHES..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="bg-black/60 border border-white/10 rounded-2xl py-3 pl-12 pr-4 text-[10px] font-black uppercase tracking-widest focus:outline-none focus:ring-2 focus:ring-yellow-400/50 placeholder:text-gray-700 w-64 transition-all"
@@ -168,17 +168,17 @@ export default function MyPitchesClient({ initialData }: { initialData: MyPitchA
           >
             <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <StatCard
-                label="Total Ops"
+                label="Total Pitches"
                 value={data.author.total_pitches}
                 icon={<Activity />}
               />
               <StatCard
-                label="Active Streams"
+                label="Active Pitches"
                 value={data.author.active_pitches}
                 icon={<Clock3 />}
               />
               <StatCard
-                label="Verified Intel"
+                label="Verified Pitches"
                 value={data.author.verified_pitches}
                 icon={<ShieldCheck />}
               />
@@ -207,7 +207,7 @@ export default function MyPitchesClient({ initialData }: { initialData: MyPitchA
             <section className="space-y-8">
               <div className="flex items-center gap-4">
                 <div className="w-1 h-6 bg-yellow-400 rounded-full" />
-                <h2 className="text-2xl font-black uppercase italic tracking-tighter">Mission History</h2>
+                <h2 className="text-2xl font-black uppercase italic tracking-tighter">Pitch History</h2>
               </div>
 
               <div className="space-y-6">
@@ -219,7 +219,7 @@ export default function MyPitchesClient({ initialData }: { initialData: MyPitchA
                       className="text-center p-20 bg-black/40 rounded-[3rem] border border-white/5"
                     >
                       <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">
-                        Zero intelligence matches for active filters.
+                        No pitches match your current filters.
                       </p>
                     </motion.div>
                   ) : (
@@ -298,7 +298,7 @@ export default function MyPitchesClient({ initialData }: { initialData: MyPitchA
                           {pitch.deck_url && (
                             <div className="space-y-4 pt-10 border-t border-white/5">
                               <div className="flex items-center justify-between mb-4 px-2">
-                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600">Attachment: Intelligence Artifact</div>
+                                <div className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-600">Attached Deck</div>
                                 <ShieldCheck className="w-4 h-4 text-yellow-400/50" />
                               </div>
                               <div className="max-w-xl">

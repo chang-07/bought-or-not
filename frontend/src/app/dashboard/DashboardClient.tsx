@@ -109,11 +109,11 @@ export default function DashboardClient({ initialPitches }: { initialPitches: Pi
           >
             <div className="w-2 h-8 bg-yellow-400 rounded-full shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
             <h1 className="text-4xl font-black tracking-tighter uppercase italic">
-              Terminal Feed
+              All Pitches
             </h1>
           </motion.div>
           <p className="text-gray-500 text-xs font-bold uppercase tracking-[0.2em] ml-5">
-            Real-time verified asymmetric intelligence
+            Real-time verified pitches
           </p>
         </div>
 
@@ -126,7 +126,7 @@ export default function DashboardClient({ initialPitches }: { initialPitches: Pi
           <Input
             icon={<Search className="w-4 h-4" />}
             type="text"
-            placeholder="FILTER BY TICKER / AUTHOR"
+            placeholder="Search Ticker..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -166,7 +166,7 @@ export default function DashboardClient({ initialPitches }: { initialPitches: Pi
               className="text-center p-20 bg-white/5 rounded-[2.5rem] border border-white/10 backdrop-blur-md"
             >
               <p className="text-gray-500 font-bold uppercase tracking-widest">
-                {pitches.length > 0 ? 'All pitches cleared from view' : 'No active data streams found'}
+                {pitches.length > 0 ? 'All pitches cleared from view' : 'No active pitches found'}
               </p>
               {pitches.length > 0 && (
                 <div className="mt-8 flex justify-center">

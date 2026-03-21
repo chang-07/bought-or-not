@@ -60,9 +60,9 @@ export default function AuthorClient({ initialProfile, username }: { initialProf
   if (!authorData) {
     return (
       <div className="min-h-screen flex flex-col justify-center items-center text-white p-6 text-center">
-        <h2 className="text-3xl font-black uppercase italic tracking-tighter mb-4">Identity Not Found</h2>
+        <h2 className="text-3xl font-black uppercase italic tracking-tighter mb-4">Author Not Found</h2>
         <p className="text-gray-500 font-bold uppercase tracking-widest text-sm">
-          No verified data stream for this subject.
+          No pitches found for this user.
         </p>
       </div>
     );
@@ -99,17 +99,17 @@ export default function AuthorClient({ initialProfile, username }: { initialProf
           <div className="text-center md:text-left">
             <h1 className="text-5xl font-black tracking-tighter uppercase italic mb-2">@{username}</h1>
             <p className="text-yellow-400 text-xs mt-1 font-black uppercase tracking-[0.3em] flex items-center justify-center md:justify-start gap-2">
-              <ShieldCheck className="w-4 h-4" /> SEC-Level Verified Mastermind
+              <ShieldCheck className="w-4 h-4" /> Verified Author
             </p>
           </div>
         </motion.div>
 
         <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: "Assets Under Intel", value: `$${authorData.total_aum.toLocaleString()}`, icon: Award, color: "yellow-400" },
-            { label: "Predictive Accuracy", value: `${authorData.win_rate.toFixed(1)}%`, icon: Target, color: "emerald-400" },
-            { label: "Aggregated Alpha", value: `${(authorData.avg_alpha * 100).toFixed(2)}%`, icon: Activity, color: "yellow-400" },
-            { label: "Verified Pulses", value: authorData.total_pitches, icon: TrendingUp, color: "gray-200" }
+            { label: "Assets Under Management", value: `$${authorData.total_aum.toLocaleString()}`, icon: Award, color: "yellow-400" },
+            { label: "Win Rate", value: `${authorData.win_rate.toFixed(1)}%`, icon: Target, color: "emerald-400" },
+            { label: "Average Alpha", value: `${(authorData.avg_alpha * 100).toFixed(2)}%`, icon: Activity, color: "yellow-400" },
+            { label: "Total Pitches", value: authorData.total_pitches, icon: TrendingUp, color: "gray-200" }
           ].map((stat, i) => (
             <motion.div 
               key={i}
@@ -136,14 +136,14 @@ export default function AuthorClient({ initialProfile, username }: { initialProf
       >
         <div className="flex items-center gap-3 mb-6">
           <div className="w-1.5 h-6 bg-yellow-400 rounded-full" />
-          <h2 className="text-xl font-black uppercase tracking-widest italic">Intelligence Archives</h2>
+          <h2 className="text-xl font-black uppercase tracking-widest italic">Pitch History</h2>
         </div>
 
         <AnimatePresence>
           {pitches.length === 0 ? (
             <div className="text-center p-20 bg-white/5 rounded-[2.5rem] border border-white/10 backdrop-blur-md">
               <p className="text-gray-500 font-bold uppercase tracking-widest">
-                ARCHIVE IS CURRENTLY EMPTY
+                NO PITCHES FOUND
               </p>
             </div>
           ) : (
@@ -189,7 +189,7 @@ export default function AuthorClient({ initialProfile, username }: { initialProf
                     {pitch.deck_url && (
                       <div className="space-y-3">
                         <div className="text-[10px] uppercase font-black tracking-[0.2em] text-gray-500 ml-1">
-                          Intelligence Deck
+                          Attached Deck
                         </div>
                         <div className="rounded-2xl overflow-hidden border border-white/10 bg-black/40 group-hover:border-yellow-400/20 transition-colors shadow-inner">
                           <PdfThumbnail url={pitch.deck_url} ticker={pitch.ticker} />
@@ -210,7 +210,7 @@ export default function AuthorClient({ initialProfile, username }: { initialProf
                         }}
                         className="flex items-center gap-3 bg-white text-black font-black py-3 px-8 rounded-xl shadow-xl hover:bg-yellow-400 transition-all uppercase tracking-widest text-xs italic"
                       >
-                        Execute Intel
+                        View / Trade
                         <ExternalLink className="w-4 h-4" />
                       </motion.button>
                     </div>
