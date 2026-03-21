@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import api from "@/lib/api";
 import { motion } from "framer-motion";
 import {
   Home,
@@ -9,10 +10,22 @@ import {
   PlusSquare,
   TrendingUp,
   BarChart3,
+  LogOut,
 } from "lucide-react";
 
 export default function TopNav() {
   const pathname = usePathname();
+  const router = useRouter();
+
+  const handleLogout = async () => {
+    try {
+      await api.post("/api/logout");
+    } catch (err) {
+      console.error("Secure logout proxy failed:", err);
+    } finally {
+      window.location.href = "/";
+    }
+  };
 
   // Hide component seamlessly on public onboarding paths
   if (pathname === "/" || pathname === "/onboarding") {
@@ -92,6 +105,24 @@ export default function TopNav() {
                 </Link>
               );
             })}
+            
+            {/* Secure Logout Sequence */}
+            <div className="pl-4 ml-4 border-l border-white/5">
+              <button
+                onClick={handleLogout}
+                className="relative group"
+              >
+                <motion.div
+                  initial={{ opacity: 0, y: -10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.5 }}
+                  className="flex items-center gap-2.5 px-5 py-2.5 rounded-xl transition-all duration-300 relative overflow-hidden text-rose-500/80 hover:text-rose-400 hover:bg-rose-500/10 border border-transparent hover:border-rose-500/20"
+                >
+                  <LogOut className="w-4 h-4 transition-transform group-hover:scale-110 stroke-2" />
+                  <span className="hidden sm:inline text-[10px] font-black uppercase tracking-widest italic">Log Out</span>
+                </motion.div>
+              </button>
+            </div>
             
           </div>
         </div>

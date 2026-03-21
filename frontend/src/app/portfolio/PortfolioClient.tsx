@@ -249,7 +249,7 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
       <div className="min-h-screen bg-[#09090b] bg-grid-vertical flex justify-center items-center">
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-yellow-400/20 border-t-yellow-400 rounded-full animate-spin" />
-          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 animate-pulse">Establishing Secure Stream...</span>
+          <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 animate-pulse">Loading Portfolio...</span>
         </div>
       </div>
     );
@@ -259,7 +259,7 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
     return (
       <div className="min-h-screen bg-[#09090b] bg-grid-vertical flex flex-col justify-center items-center text-white p-6 text-center">
         <AlertTriangle className="w-20 h-20 text-yellow-400 mb-6 drop-shadow-[0_0_15px_rgba(250,204,21,0.3)]" />
-        <h2 className="text-3xl font-black uppercase italic tracking-tighter">Terminal Offline</h2>
+        <h2 className="text-3xl font-black uppercase italic tracking-tighter">Portfolio Error</h2>
         <p className="text-gray-500 mt-4 max-w-md text-[10px] font-black uppercase tracking-widest leading-relaxed">
           {error}
         </p>
@@ -279,12 +279,11 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
             <div className="flex items-center gap-3">
               <div className="w-1.5 h-8 bg-yellow-400 rounded-full shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
               <h1 className="text-4xl font-black uppercase italic tracking-tighter">
-                Control Center
+                My Portfolio
               </h1>
             </div>
             <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] max-w-xl leading-relaxed">
-              Real-time synchronization with primary exchange protocols. 
-              Manage assets and liquidity across linked brokerage nodes.
+              View your synced brokerage accounts and manage your positions.
             </p>
           </div>
 
@@ -299,7 +298,7 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
               <div className="w-5 h-5 border-3 border-black/20 border-t-black rounded-full animate-spin" />
             ) : (
               <>
-                Manage Nodes
+                Manage Accounts
                 <ExternalLink className="w-4 h-4 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />
               </>
             )}
@@ -307,7 +306,7 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
         </motion.header>
 
         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Linked Nodes" value={accounts.length} icon={<Activity />} />
+          <StatCard label="Linked Accounts" value={accounts.length} icon={<Activity />} />
           <StatCard label="Live Positions" value={totals.totalPositions} icon={<Target />} />
           <StatCard
             label="Equity Value"
@@ -316,7 +315,7 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
             trend={totals.totalPnL >= 0 ? "up" : "down"}
           />
           <StatCard
-            label="Liquid Reserves"
+            label="Total Cash"
             value={`$${totals.totalCash.toLocaleString(undefined, { maximumFractionDigits: 2 })}`}
             icon={<Wallet />}
           />
@@ -343,8 +342,8 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
                 <Briefcase className="w-12 h-12 text-gray-700" />
               </div>
               <p className="text-gray-500 text-[10px] font-black uppercase tracking-widest">
-                No active brokerage nodes detected. 
-                Establish a link to initialize the dashboard.
+                No active brokerage accounts detected. 
+                Connect a brokerage to initialize your portfolio.
               </p>
             </motion.div>
           ) : (
@@ -370,14 +369,14 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
                       </div>
                     </div>
                     <div className="flex items-center gap-2 text-yellow-400 bg-yellow-400/5 px-4 py-2 rounded-xl border border-yellow-400/20 text-[10px] font-black uppercase tracking-widest">
-                      <ShieldCheck className="w-4 h-4" /> Protocol Synced
+                      <ShieldCheck className="w-4 h-4" /> Synced
                     </div>
                   </div>
 
                   <div className="p-10 bg-black/20">
                     <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 mb-6 flex items-center gap-3">
                       <Wallet className="w-4 h-4" />
-                      Liquidity Nodes
+                      Balances
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {account.balances.map((b: any, i: number) => (
@@ -386,7 +385,7 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
                           className="bg-black/40 border border-white/5 rounded-2xl p-6 group hover:border-yellow-400/20 transition-colors"
                         >
                           <div className="text-[10px] font-black text-gray-600 uppercase tracking-widest mb-2 group-hover:text-yellow-400 transition-colors">
-                            {b.currency || "N/A"} RESERVES
+                            {b.currency || "N/A"} BALANCE
                           </div>
                           <div className="text-2xl font-black italic tracking-tighter text-white">
                             {b.cash.toLocaleString(undefined, {
@@ -402,12 +401,12 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="bg-black/40 text-[10px] font-black uppercase tracking-widest text-gray-600">
-                          <th className="p-8">Instrument</th>
-                          <th className="p-8">Quantum</th>
-                          <th className="p-8">Mark Price</th>
-                          <th className="p-8">Avg Entry</th>
+                          <th className="p-8">Symbol</th>
+                          <th className="p-8">Shares</th>
+                          <th className="p-8">Price</th>
+                          <th className="p-8">Avg Cost</th>
                           <th className="p-8">Unrealized P/L</th>
-                          <th className="p-8 text-right">Dispatch</th>
+                          <th className="p-8 text-right">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">

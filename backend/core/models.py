@@ -36,7 +36,7 @@ class Pitch(models.Model):
 
 class PitchAttachment(models.Model):
     pitch = models.ForeignKey(Pitch, on_delete=models.CASCADE, related_name='attachments')
-    file_blob = models.BinaryField(null=True, blank=True)
+    file = models.FileField(upload_to='pitch_decks/', null=True, blank=True)
     file_name = models.CharField(max_length=255, blank=True, default='')
     file_size_bytes = models.BigIntegerField(null=True, blank=True)
     file_type = models.CharField(max_length=100)
@@ -44,6 +44,8 @@ class PitchAttachment(models.Model):
 
     @property
     def resolved_url(self):
+        if self.file and hasattr(self.file, 'url'):
+            return self.file.url
         return None
 
     def __str__(self):

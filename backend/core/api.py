@@ -241,7 +241,7 @@ def create_pitch(request, payload: PitchCreateSchema, deck: UploadedFile = File(
     if deck:
         attachment = PitchAttachment.objects.create(
             pitch=pitch,
-            file_blob=deck.read(),
+            file=deck,
             file_name=str(getattr(deck, "name", "") or ""),
             file_size_bytes=int(getattr(deck, "size", 0) or 0),
             file_type=str(getattr(deck, "content_type", "") or "application/octet-stream"),
@@ -268,7 +268,7 @@ class PitchResponseSchema(Schema):
 @router.get("/pitches", response=list[PitchResponseSchema])
 def get_pitches(request, search: str = None):
     # Public feed: all ACTIVE pitches (verified and pending), newest first.
-    pitches = Pitch.objects.select_related('author__user').prefetch_related('pitchattachment_set').filter(status='ACTIVE').order_by('-created_at')
+    pitches = Pitch.objects.select_related('author__user').prefetch_related('attachments').filter(status='ACTIVE').order_by('-created_at')
 
     if request.user.is_authenticated:
         try:
@@ -302,7 +302,7 @@ def get_pitches(request, search: str = None):
                 request.user.is_authenticated and p.author.user_id == request.user.id
             ),
             "content_body": str(p.content_body),
-            "deck_url": f"/api/pitches/{int(p.id)}/deck" if attachment and attachment.file_blob else None,
+            "deck_url": f"/api/pitches/{int(p.id)}/deck" if attachment and attachment.file else None,
         })
 
     return response_data
@@ -514,7 +514,7 @@ def get_author_profile(request, username: str):
     try:
         user = User.objects.get(username=username)
         # author is a FK to UserProfile; filter via author__user
-        pitches = Pitch.objects.select_related('author__user').prefetch_related('pitchattachment_set').filter(author__user=user).order_by('-created_at')
+        pitches = Pitch.objects.select_related('author__user').prefetch_related('attachments').filter(author__user=user).order_by('-created_at')
 
         total_pitches = int(pitches.count())
         win_count = int(pitches.filter(current_alpha__gt=0).count())
@@ -557,7 +557,7 @@ def get_my_pitches_analytics(request):
         return {"error": "Not authenticated"}
 
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
-    pitches = Pitch.objects.select_related('author__user').prefetch_related('pitchattachment_set').filter(author=profile).order_by('-created_at')
+    pitches = Pitch.objects.select_related('author__user').prefetch_related('attachments').filter(author=profile).order_by('-created_at')
 
     total_pitches = int(pitches.count())
     active_pitches = int(pitches.filter(status='ACTIVE').count())
@@ -590,7 +590,7 @@ def get_my_pitches_analytics(request):
                 "is_verified": bool(p.is_verified),
                 "content_body": str(p.content_body),
                 "created_at": p.created_at.isoformat(),
-                "deck_url": f"/api/pitches/{int(p.id)}/deck" if p.attachments.first() and p.attachments.first().file_blob else None,
+                "deck_url": f"/api/pitches/{int(p.id)}/deck" if p.attachments.first() and p.attachments.first().file else None,
             }
             for p in pitches
         ],
@@ -602,7 +602,7 @@ def get_pitch_deck(request, pitch_id: int):
     try:
         pitch = Pitch.objects.get(id=pitch_id)
         attachment = pitch.attachments.first()
-        if not attachment or not attachment.file_blob:
+        if not attachment or not attachment.file:
             return {"error": "Deck not found"}
 
         from django.http import HttpResponse
@@ -620,7 +620,7 @@ def get_pitch_deck(request, pitch_id: int):
         else:
             content_type = "application/octet-stream"
 
-        response = HttpResponse(bytes(attachment.file_blob), content_type=content_type)
+        response = HttpResponse(attachment.file.read(), content_type=content_type)
 
         # Inline disposition prevents attachment-style auto-download in iframes.
         response["Content-Disposition"] = f'inline; filename="{filename}"'
