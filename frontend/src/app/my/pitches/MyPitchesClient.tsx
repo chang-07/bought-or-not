@@ -60,7 +60,7 @@ export default function MyPitchesClient({ initialData }: { initialData: MyPitchA
   // Bypassed generic client fetch; using Next SSR initialData
 
   const filteredPitches = useMemo(() => {
-    if (!data) return [];
+    if (!data || !data.pitches) return [];
     return data.pitches.filter((p) => {
       const byStatus =
         statusFilter === "ALL"
@@ -97,6 +97,20 @@ export default function MyPitchesClient({ initialData }: { initialData: MyPitchA
         <div className="flex flex-col items-center gap-4">
           <div className="w-12 h-12 border-4 border-yellow-400/20 border-t-yellow-400 rounded-full animate-spin" />
           <span className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-500 animate-pulse">Syncing Pitch Intel...</span>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !data || !data.pitches) {
+    return (
+      <div className="min-h-screen bg-[#09090b] text-white p-8 flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <h2 className="text-3xl font-black italic uppercase tracking-tighter text-rose-400">RESTRICTED ACCESS</h2>
+          <p className="text-gray-500 font-bold tracking-widest text-[10px] uppercase">{error || "Intelligence Feed Unavailable"}</p>
+          <a href="/" className="inline-block mt-4 px-6 py-3 bg-yellow-400 text-black font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-yellow-500 transition-colors">
+            Return to HQ
+          </a>
         </div>
       </div>
     );
