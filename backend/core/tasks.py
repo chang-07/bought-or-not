@@ -1,6 +1,9 @@
 from celery import shared_task
 from .models import Pitch, UserProfile
-from snaptrade_client import SnapTrade # type: ignore
+try:
+    from snaptrade_client import SnapTrade # type: ignore
+except ImportError:
+    SnapTrade = type('SnapTrade', (object,), {'__new__': lambda cls, **k: None})
 import os
 import finnhub # type: ignore
 
@@ -158,3 +161,68 @@ def update_alpha_scores():
             profile.total_alpha = avg_alpha
             profile.win_rate = win_rate
             profile.save()
+
+@shared_task
+def snapshot_all_portfolios():
+    """
+    Run daily to snapshot the total portfolio value for all users with linked accounts.
+    """
+    profiles = UserProfile.objects.filter(snaptrade_secret__isnull=False)
+    for profile in profiles:
+        try:
+            accounts_res = snaptrade.account_information.list_user_accounts(
+                user_id=str(profile.snaptrade_user_id),
+                user_secret=profile.snaptrade_secret
+            )
+            # Support both SDK models
+            if hasattr(accounts_res, 'body'):
+                accounts = getattr(accounts_res, 'body', [])
+            else:
+                accounts = accounts_res
+            
+            total_value = 0.0
+            
+            for account in accounts:
+                acc_id = account.get('id') if isinstance(account, dict) else getattr(account, 'id', None)
+                if not acc_id: continue
+
+                holdings_res = snaptrade.account_information.get_user_holdings(
+                    account_id=str(acc_id),
+                    user_id=str(profile.snaptrade_user_id),
+                    user_secret=profile.snaptrade_secret
+                )
+                
+                holdings_body = getattr(holdings_res, 'body', type('obj', (object,), {'balances': [], 'positions': []})())
+                # If it's a raw dict vs object
+                if isinstance(holdings_body, dict):
+                    balances = holdings_body.get('balances', [])
+                    raw_positions = (
+                        holdings_body.get('positions') or 
+                        holdings_body.get('account', {}).get('positions') or 
+                        holdings_body.get('holdings', {}).get('positions') or []
+                    )
+                else:
+                    balances = getattr(holdings_body, 'balances', [])
+                    raw_positions = getattr(holdings_body, 'positions', [])
+
+                for b in balances:
+                    cash_val = b.get('cash') if isinstance(b, dict) else getattr(b, 'cash', 0)
+                    total_value += float(cash_val or 0)
+                
+                for pos in raw_positions:
+                    p = float(pos.get('price') or 0) if isinstance(pos, dict) else float(getattr(pos, 'price', 0) or 0)
+                    u = float(pos.get('units') or getattr(pos, 'quantity', 0) or 0) if isinstance(pos, dict) else float(getattr(pos, 'units', 0) or 0)
+                    total_value += p * u
+
+            from .models import PortfolioSnapshot
+            import datetime
+            today = datetime.date.today()
+            PortfolioSnapshot.objects.update_or_create(
+                user=profile,
+                date=today,
+                defaults={'total_value': total_value}
+            )
+            
+        except Exception as e:
+            print(f"Error snapshotting portfolio for {profile.user.username}: {e}")
+

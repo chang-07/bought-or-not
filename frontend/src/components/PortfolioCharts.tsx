@@ -31,6 +31,7 @@ type PortfolioChartsProps = {
   positions: Position[];
   totalMarketValue: number;
   totalCash: number;
+  snapshots?: { date: string; value: number }[];
 };
 
 const CHART_COLORS = [
@@ -100,6 +101,7 @@ export default function PortfolioCharts({
   positions,
   totalMarketValue,
   totalCash,
+  snapshots = [],
 }: PortfolioChartsProps) {
   // --- Allocation data (pie chart) ---
   const allocationData = useMemo(() => {
@@ -130,37 +132,34 @@ export default function PortfolioCharts({
       .sort((a, b) => b.pnl - a.pnl);
   }, [positions]);
 
-  // --- Simulated portfolio value timeline from positions ---
+  // --- Real portfolio value timeline from backend snapshots ---
   const valueTimeline = useMemo(() => {
-    // Build a synthetic 30-day portfolio value timeline based on current data
-    // This provides a visual representation when SnapTrade return rates aren't available
     const totalValue = totalMarketValue + totalCash;
     if (totalValue <= 0) return [];
 
-    const days = 30;
-    const data = [];
-    const now = new Date();
+    const data = [...snapshots].sort(
+      (a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()
+    ).map(snap => ({
+      ...snap,
+      // Format as Dec 14 for the X axis
+      date: new Date(snap.date).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" }),
+      value: Math.round(snap.value * 100) / 100,
+    }));
 
-    for (let i = days; i >= 0; i--) {
-      const date = new Date(now);
-      date.setDate(now.getDate() - i);
-      // Simulate natural market movement with deterministic pseudo-randomness
-      const dayFactor = 1 + (Math.sin(i * 0.5) * 0.02) + ((days - i) * 0.001);
-      const pseudoRandom = Math.abs(Math.sin(i * 12.9898 + totalValue)) % 1;
-      const noise = 1 + (pseudoRandom - 0.5) * 0.01;
-      const value = totalValue * dayFactor * noise * 0.95;
-
+    // Append today's live value to the end if the snapshots don't end on exactly today
+    const todayLabel = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric" });
+    if (data.length === 0 || data[data.length - 1].date !== todayLabel) {
       data.push({
-        date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-        value: Math.round(value * 100) / 100,
+        date: todayLabel,
+        value: totalValue,
       });
+    } else {
+      // Overwrite today's snapshot with live fluctuating value
+      data[data.length - 1].value = totalValue;
     }
 
-    // Last point is always the actual current value
-    data[data.length - 1].value = totalValue;
-
     return data;
-  }, [totalMarketValue, totalCash]);
+  }, [snapshots, totalMarketValue, totalCash]);
 
   if (positions.length === 0) return null;
 

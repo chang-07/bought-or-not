@@ -4,7 +4,7 @@ import type { NextRequest } from 'next/server';
 // Define the critical routes that require an authenticated session
 const protectedRoutes = ['/dashboard', '/portfolio', '/pitch/new', '/my/pitches'];
 
-export function middleware(request: NextRequest) {
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   
   const isProtected = protectedRoutes.some((route) => pathname.startsWith(route));

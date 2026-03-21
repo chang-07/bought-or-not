@@ -58,3 +58,25 @@ class TradeEvent(models.Model):
 
     def __str__(self):
         return f"Trade by {self.reader.user.username} for {self.pitch.ticker if self.pitch else 'Unknown'}"
+
+class HiddenPitch(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='hidden_pitches')
+    pitch = models.ForeignKey(Pitch, on_delete=models.CASCADE, related_name='hidden_by')
+    hidden_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'pitch')
+
+    def __str__(self):
+        return f"{self.user.user.username} hid {self.pitch.ticker}"
+
+class PortfolioSnapshot(models.Model):
+    user = models.ForeignKey(UserProfile, on_delete=models.CASCADE, related_name='portfolio_snapshots')
+    total_value = models.DecimalField(max_digits=15, decimal_places=2)
+    date = models.DateField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'date')
+
+    def __str__(self):
+        return f"{self.user.user.username} snapshot on {self.date}"
