@@ -135,7 +135,14 @@ CORS_ALLOWED_ORIGINS = frontend_urls
 CORS_ALLOW_CREDENTIALS = True
 CSRF_TRUSTED_ORIGINS = frontend_urls
 
+# Cross-Domain Cookie Settings (REQUIRED for Netlify -> Render auth)
+SESSION_COOKIE_SAMESITE = 'None'
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SAMESITE = 'None'
+CSRF_COOKIE_SECURE = True
+
 # Celery Configuration
+# ... (rest of the file)
 CELERY_BROKER_URL = os.getenv('CELERY_BROKER_URL', 'redis://localhost:6379/0')
 CELERY_RESULT_BACKEND = os.getenv('CELERY_RESULT_BACKEND', 'redis://localhost:6379/0')
 CELERY_ACCEPT_CONTENT = ['json']
