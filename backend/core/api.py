@@ -160,7 +160,24 @@ def snaptrade_connect(request):
             profile.snaptrade_secret = response.body['userSecret']
             profile.save()
         except Exception as e:
-            return {"error": str(e)}
+            err_str = str(e)
+            if "Personal keys can only register one user" in err_str or "1012" in err_str:
+                # Personal Key Limit Hit: The Render DB is fresh but Snaptrade remembers the old local user.
+                # Because we lost the old secret, that user is orphaned. Delete it and retry.
+                try:
+                    users_res = snaptrade.authentication.list_snap_trade_users()
+                    for old_uid in getattr(users_res, 'body', []):
+                        snaptrade.authentication.delete_snap_trade_user(user_id=old_uid)
+                    
+                    # Retry registration
+                    retry_res = snaptrade.authentication.register_snap_trade_user(user_id=user_id)
+                    profile.snaptrade_user_id = retry_res.body['userId']
+                    profile.snaptrade_secret = retry_res.body['userSecret']
+                    profile.save()
+                except Exception as inner_e:
+                    return {"error": f"Failed to reset personal key space: {inner_e}"}
+            else:
+                return {"error": err_str}
 
     try:
         redirect_res = snaptrade.authentication.login_snap_trade_user(
