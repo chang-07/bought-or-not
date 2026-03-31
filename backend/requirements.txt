@@ -13,3 +13,4 @@ Pillow
 gunicorn
 dj-database-url
 whitenoise
+pytz

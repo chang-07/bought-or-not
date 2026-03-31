@@ -262,12 +262,23 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#09090b] bg-grid-vertical flex flex-col justify-center items-center text-white p-6 text-center">
+      <div className="min-h-screen bg-[#09090b] flex flex-col justify-center items-center text-white p-6 text-center">
         <AlertTriangle className="w-20 h-20 text-yellow-400 mb-6 drop-shadow-[0_0_15px_rgba(250,204,21,0.3)]" />
         <h2 className="text-3xl font-black uppercase italic tracking-tighter">Portfolio Error</h2>
-        <p className="text-gray-500 mt-4 max-w-md text-[10px] font-black uppercase tracking-widest leading-relaxed">
+        <p className="text-gray-500 mt-4 max-w-md text-[10px] font-black uppercase tracking-widest leading-relaxed mb-8">
           {error}
         </p>
+        {(error.includes("SnapTrade") || error.includes("authentication")) && (
+          <motion.button
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleManageBrokerages}
+            disabled={manageLoading}
+            className="bg-yellow-400 hover:bg-yellow-300 text-black font-black py-4 px-8 rounded-2xl shadow-xl transition-all uppercase italic tracking-widest text-xs flex items-center gap-3 disabled:opacity-50"
+          >
+            {manageLoading ? "Connecting..." : "Connect Brokerage"}
+          </motion.button>
+        )}
       </div>
     );
   }
