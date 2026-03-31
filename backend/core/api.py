@@ -661,9 +661,9 @@ def get_pitch_deck(request, pitch_id: int):
         # Inline disposition prevents attachment-style auto-download in iframes.
         response["Content-Disposition"] = f'inline; filename="{filename}"'
 
-        # Prevent MIME sniffing issues and allow same-origin iframe rendering.
+        # Prevent MIME sniffing issues and allow cross-origin rendering from Netlify
         response["X-Content-Type-Options"] = "nosniff"
-        response["Cross-Origin-Resource-Policy"] = "same-origin"
+        response["Cross-Origin-Resource-Policy"] = "cross-origin"
 
         return response
     except Pitch.DoesNotExist:

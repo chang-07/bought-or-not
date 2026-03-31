@@ -21,9 +21,13 @@ export default function PdfThumbnail({ url, ticker }: PdfThumbnailProps) {
     setNumPages(numPages);
   }
 
+  const absoluteUrl = url.startsWith('/') 
+    ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${url}`
+    : url;
+
   const handleDownload = () => {
     const link = document.createElement("a");
-    link.href = url;
+    link.href = absoluteUrl;
     link.download = `${ticker}_Pitch_Deck.pdf`;
     document.body.appendChild(link);
     link.click();
@@ -39,7 +43,7 @@ export default function PdfThumbnail({ url, ticker }: PdfThumbnailProps) {
     >
       <div className="flex justify-center items-center h-[350px] sm:h-[420px] overflow-hidden transition-all duration-700 group-hover:scale-[1.05] group-hover:blur-[2px]">
         <Document
-          file={url}
+          file={absoluteUrl}
           onLoadSuccess={onDocumentLoadSuccess}
           loading={
             <div className="flex flex-col items-center gap-4">
