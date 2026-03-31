@@ -1,8 +1,10 @@
 import axios from 'axios';
 
-// The backend is proxied, so baseURL is empty for same-origin requests
+// Use remote backend URL for cross-origin requests
+const baseURL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+
 const api = axios.create({
-  baseURL: '',
+  baseURL: baseURL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json',
