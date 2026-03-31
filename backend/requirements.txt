@@ -6,7 +6,7 @@ celery
 redis
 python-dotenv
 django-ninja
-snaptrade-client
+snaptrade-python-sdk
 finnhub-python
 psycopg2-binary
 Pillow
