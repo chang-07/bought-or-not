@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Briefcase,
@@ -123,7 +123,12 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
   const [manageLoading, setManageLoading] = useState(false);
   const [snapshots, setSnapshots] = useState<{date: string, value: number}[]>(initialSnapshots);
 
-  // Bypassed initial generic fetch due to Next.js SSR
+  // Initial Generic Fetch on Mount to seamlessly catch SSR drops (Third-Party Cookies)
+  useEffect(() => {
+    if (initialPortfolio?.error) {
+      fetchPortfolio();
+    }
+  }, []);
 
   const totals = useMemo(() => {
     let totalPositions = 0;

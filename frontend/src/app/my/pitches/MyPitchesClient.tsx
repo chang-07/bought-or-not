@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import api from "@/lib/api";
 import { StatCard } from "@/components/ui/StatCard";
 
 const PdfThumbnail = dynamic(() => import("@/components/PdfThumbnail"), { ssr: false });
@@ -47,10 +48,32 @@ type MyPitchAnalytics = {
 };
 
 export default function MyPitchesClient({ initialData }: { initialData: MyPitchAnalytics | null }) {
-  const [data] = useState<MyPitchAnalytics | null>(initialData);
-  const loading = false;
+  const [data, setData] = useState<MyPitchAnalytics | null>(initialData);
+  const [loading, setLoading] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [error, setError] = useState(initialData?.error ? initialData.error : "");
+
+  useEffect(() => {
+    if (initialData?.error) {
+      const fetchClientData = async () => {
+        setLoading(true);
+        setError("");
+        try {
+          const res = await api.get<MyPitchAnalytics>("/api/my/pitches");
+          if (res.data?.error) {
+            setError(res.data.error);
+          } else {
+            setData(res.data);
+          }
+        } catch {
+          setError("Connection error");
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchClientData();
+    }
+  }, [initialData]);
 
   const [statusFilter, setStatusFilter] = useState<
     "ALL" | "ACTIVE" | "CLOSED" | "TARGET_HIT"
