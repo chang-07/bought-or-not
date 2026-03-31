@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Search,
@@ -32,11 +32,15 @@ type Pitch = {
   is_verified?: boolean;
 };
 
-export default function DashboardClient({ initialPitches }: { initialPitches: Pitch[] }) {
-  const [pitches, setPitches] = useState<Pitch[]>(initialPitches);
+export default function DashboardClient() {
+  const [pitches, setPitches] = useState<Pitch[]>([]);
   const [loading, setLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [dismissed, setDismissed] = useState<number[]>([]);
+
+  useEffect(() => {
+    fetchPitches();
+  }, []);
 
   const handleDismiss = async (id: number) => {
     setDismissed((prev) => [...prev, id]);
@@ -90,8 +94,6 @@ export default function DashboardClient({ initialPitches }: { initialPitches: Pi
       setRefreshing(false);
     }
   };
-
-  // bypassed initial fetch because pitches arrive hydrated from SSR
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
