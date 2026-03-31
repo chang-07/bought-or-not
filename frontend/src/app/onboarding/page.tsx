@@ -43,9 +43,9 @@ export default function OnboardingPage() {
                         <Building2 className="w-12 h-12 text-black transition-transform group-hover:scale-110" strokeWidth={2.5} />
                     </div>
 
-                    <h1 className="text-3xl font-black uppercase italic tracking-tighter mb-4 text-white">Initialize Node</h1>
+                    <h1 className="text-3xl font-black uppercase italic tracking-tighter mb-4 text-white">Connect Brokerage</h1>
                     <p className="text-gray-500 mb-10 text-[10px] font-black uppercase tracking-widest leading-relaxed">
-                        To publish verified intel or execute copy trades, Bought-or-Not requires a secure linkage to your exchange protocol.
+                        To publish verified pitches or execute copy trades, Bought-or-Not requires a secure connection to your brokerage.
                     </p>
 
                     {error && (
@@ -68,7 +68,7 @@ export default function OnboardingPage() {
                         ) : (
                             <>
                                 <LinkIcon className="w-5 h-5" strokeWidth={3} />
-                                <span>Link Protocol</span>
+                                <span>Connect Brokerage</span>
                                 <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform ml-auto" />
                             </>
                         )}
@@ -76,7 +76,7 @@ export default function OnboardingPage() {
                     
                     <div className="mt-8 flex items-center justify-center gap-2 text-[8px] font-black text-gray-700 uppercase tracking-[0.3em]">
                         <ShieldCheck className="w-3 h-3 text-yellow-500/50" />
-                        SnapTrade Encrypted Pipeline
+                        Secured by SnapTrade
                     </div>
                 </motion.div>
             </main>

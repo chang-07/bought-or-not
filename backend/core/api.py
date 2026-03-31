@@ -276,9 +276,16 @@ def create_pitch(request, payload: PitchCreateSchema, deck: UploadedFile = File(
             file_type=str(getattr(deck, "content_type", "") or "application/octet-stream"),
         )
 
-    verify_pitch_holdings.delay(pitch.id)
-    return {"success": True, "pitch_id": int(pitch.id)}
+    try:
+        verify_pitch_holdings.delay(pitch.id)
+    except Exception as e:
+        print(f"Celery task dispatch failed, running synchronously: {e}")
+        try:
+            verify_pitch_holdings(pitch.id)
+        except Exception as sync_e:
+            print(f"Sync verification failed: {sync_e}")
 
+    return {"success": True, "pitch_id": int(pitch.id)}
 
 class PitchResponseSchema(Schema):
     id: int
@@ -822,7 +829,12 @@ def refresh_alpha(request):
         update_alpha_scores.delay()
         return {"success": True, "message": "Alpha scores dispatched for background refresh via Finnhub"}
     except Exception as e:
-        return {"error": str(e)}
+        print(f"Alpha score update dispatch failed: {e}")
+        try:
+            update_alpha_scores()
+            return {"success": True, "message": "Alpha scores refreshed synchronously"}
+        except Exception as sync_e:
+            return {"error": f"Sync alpha update failed: {sync_e}"}
 
 
 # ---------------------------------------------------------------------------

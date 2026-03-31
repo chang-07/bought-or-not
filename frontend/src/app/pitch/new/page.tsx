@@ -165,13 +165,13 @@ export default function NewPitchPage() {
       });
 
       if (res.data.success) {
-        setSuccess("Transmission successful. Awaiting protocol verification...");
+        setSuccess("Upload successful. Awaiting verification...");
         setTimeout(() => router.push("/dashboard"), 2000);
       } else {
-        setError(res.data.error || "Broadcast failure");
+        setError(res.data.error || "Upload failed");
       }
     } catch {
-      setError("Ulink connection terminated.");
+      setError("Connection to server failed.");
     } finally {
       setLoading(false);
     }
@@ -204,11 +204,11 @@ export default function NewPitchPage() {
           <div className="flex items-center gap-3 mb-4">
             <div className="w-1.5 h-8 bg-yellow-400 rounded-full shadow-[0_0_15px_rgba(250,204,21,0.5)]" />
             <h1 className="text-4xl font-black tracking-tighter uppercase italic">
-              Dispatch Intel
+              Post Pitch
             </h1>
           </div>
           <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.3em] ml-1">
-            Submit research for instant cross-exchange verification
+            Submit research for verification
           </p>
         </motion.div>
 
@@ -322,7 +322,7 @@ export default function NewPitchPage() {
 
             <div className="space-y-3">
               <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
-                Executive Intelligence Summary (Markdown)
+                Investment Thesis (Markdown)
               </label>
               <textarea
                 required
@@ -338,7 +338,7 @@ export default function NewPitchPage() {
 
             <div className="space-y-3">
               <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest ml-1">
-                Intelligence Artifact (Deck)
+                Pitch Deck (PDF/PPTX)
               </label>
               <motion.div 
                 whileHover={{ borderColor: "rgba(250, 204, 21, 0.4)" }}
@@ -377,7 +377,7 @@ export default function NewPitchPage() {
                     >
                       <FileUp className="w-10 h-10 mb-5 text-gray-700 opacity-50" />
                       <p className="font-black text-[10px] uppercase tracking-[0.2em]">
-                        Click to upload Intel artifact
+                        Click to upload pitch deck
                       </p>
                       <p className="text-[9px] font-bold text-gray-700 mt-2 uppercase">
                         PDF / PPTX / MAX 10MB
@@ -420,10 +420,10 @@ export default function NewPitchPage() {
               {loading ? (
                 <div className="w-6 h-6 border-3 border-black/20 border-t-black rounded-full animate-spin" />
               ) : success ? (
-                <span>Transmission Active</span>
+                <span>Uploading...</span>
               ) : (
                 <>
-                  <span>Initialize Broadcast</span>
+                  <span>Submit Pitch</span>
                   <ChevronRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                 </>
               )}
@@ -431,7 +431,7 @@ export default function NewPitchPage() {
 
             <div className="text-center text-[9px] text-gray-600 font-black uppercase tracking-[0.2em] flex justify-center items-center gap-3 pt-4">
               <ShieldCheck className="w-4 h-4 text-yellow-400/50" />
-              Node verification will trigger upon submission
+              Trades will be verified automatically upon submission
             </div>
           </form>
         </motion.div>
