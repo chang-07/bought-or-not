@@ -1,0 +1,15 @@
+Django>=5.0,<6.1
+django-cors-headers
+django-storages
+boto3
+celery
+redis
+python-dotenv
+django-ninja
+snaptrade-client
+finnhub-python
+psycopg2-binary
+Pillow
+gunicorn
+dj-database-url
+whitenoise

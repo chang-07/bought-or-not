@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import api from "@/lib/api";
 import { motion } from "framer-motion";
 import {
@@ -15,7 +15,6 @@ import {
 
 export default function TopNav() {
   const pathname = usePathname();
-  const router = useRouter();
 
   const handleLogout = async () => {
     try {

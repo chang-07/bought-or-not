@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Activity,
@@ -12,8 +12,8 @@ import {
   Search,
   ShieldCheck,
 } from "lucide-react";
-import api from "@/lib/api";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { StatCard } from "@/components/ui/StatCard";
 
 const PdfThumbnail = dynamic(() => import("@/components/PdfThumbnail"), { ssr: false });
@@ -47,8 +47,8 @@ type MyPitchAnalytics = {
 };
 
 export default function MyPitchesClient({ initialData }: { initialData: MyPitchAnalytics | null }) {
-  const [data, setData] = useState<MyPitchAnalytics | null>(initialData);
-  const [loading, setLoading] = useState(false);
+  const [data] = useState<MyPitchAnalytics | null>(initialData);
+  const loading = false;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [error, setError] = useState(initialData?.error ? initialData.error : "");
 
@@ -108,9 +108,9 @@ export default function MyPitchesClient({ initialData }: { initialData: MyPitchA
         <div className="text-center space-y-4">
           <h2 className="text-3xl font-black italic uppercase tracking-tighter text-rose-400">RESTRICTED ACCESS</h2>
           <p className="text-gray-500 font-bold tracking-widest text-[10px] uppercase">{error || "Intelligence Feed Unavailable"}</p>
-          <a href="/" className="inline-block mt-4 px-6 py-3 bg-yellow-400 text-black font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-yellow-500 transition-colors">
+          <Link href="/" className="inline-block mt-4 px-6 py-3 bg-yellow-400 text-black font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-yellow-500 transition-colors">
             Return to HQ
-          </a>
+          </Link>
         </div>
       </div>
     );

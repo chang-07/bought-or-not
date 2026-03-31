@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   TrendingUp,
@@ -11,8 +11,6 @@ import {
   Target,
   Activity,
 } from "lucide-react";
-import api from "@/lib/api";
-import { useParams } from "next/navigation";
 import TradeModal from "@/components/TradeModal";
 import dynamic from 'next/dynamic';
 
@@ -36,10 +34,10 @@ interface AuthorData {
   total_pitches: number;
 }
 
-export default function AuthorClient({ initialProfile, username }: { initialProfile: any; username: string }) {
-  const [authorData, setAuthorData] = useState<AuthorData | null>(initialProfile?.author || null);
-  const [pitches, setPitches] = useState<Pitch[]>(initialProfile?.pitches || []);
-  const [loading, setLoading] = useState(false);
+export default function AuthorClient({ initialProfile, username }: { initialProfile: { author: AuthorData | null; pitches: Pitch[] } | null; username: string }) {
+  const [authorData] = useState<AuthorData | null>(initialProfile?.author || null);
+  const [pitches] = useState<Pitch[]>(initialProfile?.pitches || []);
+  const loading = false;
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedPitch, setSelectedPitch] = useState<{

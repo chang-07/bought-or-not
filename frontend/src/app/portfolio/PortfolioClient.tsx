@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Briefcase,
@@ -72,15 +72,20 @@ type PortfolioClientProps = {
   initialSnapshots: { date: string; value: number }[];
 };
 
+type RawPosition = { ticker?: string; units?: number; price?: number; average_purchase_price?: number; open_pnl?: number; [key: string]: unknown };
+type RawBalance = { currency?: string; cash?: number; [key: string]: unknown };
+type RawAccount = { account_id?: string; account_name?: string; positions?: RawPosition[]; balances?: RawBalance[]; debug?: AccountDebug; [key: string]: unknown };
+
+
 export default function PortfolioClient({ initialPortfolio, initialSnapshots }: PortfolioClientProps) {
   const [accounts, setAccounts] = useState<Account[]>(() => {
     const rawPortfolio = Array.isArray(initialPortfolio?.portfolio)
       ? initialPortfolio.portfolio
       : [];
 
-    return rawPortfolio.map((acc: any) => {
+    return rawPortfolio.map((acc: RawAccount) => {
       const positions = Array.isArray(acc.positions)
-        ? acc.positions.map((p: any) => ({
+        ? acc.positions.map((p: RawPosition) => ({
             ticker: String(p?.ticker || "UNK"),
             units: Number(p?.units || 0),
             price: Number(p?.price || 0),
@@ -90,7 +95,7 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
         : [];
 
       const balances = Array.isArray(acc.balances)
-        ? acc.balances.map((b: any) => ({
+        ? acc.balances.map((b: RawBalance) => ({
             currency: String(b?.currency || ""),
             cash: Number(b?.cash || 0),
           }))
@@ -99,7 +104,7 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
       return {
         account_id: String(acc.account_id || ""),
         account_name: String(acc.account_name || "Brokerage Account"),
-        positions: positions.filter((p: any) => p.units > 0 && p.ticker !== "UNK"),
+        positions: positions.filter((p: Position) => p.units > 0 && p.ticker !== "UNK"),
         balances,
         debug: acc.debug,
       };
@@ -166,9 +171,9 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
         ? res.data.portfolio
         : [];
 
-      const normalized = rawPortfolio.map((acc: any) => {
+      const normalized = rawPortfolio.map((acc: RawAccount) => {
         const positions = Array.isArray(acc.positions)
-          ? acc.positions.map((p: any) => ({
+          ? acc.positions.map((p: RawPosition) => ({
               ticker: String(p?.ticker || "UNK"),
               units: Number(p?.units || 0),
               price: Number(p?.price || 0),
@@ -178,7 +183,7 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
           : [];
 
         const balances = Array.isArray(acc.balances)
-          ? acc.balances.map((b: any) => ({
+          ? acc.balances.map((b: RawBalance) => ({
               currency: String(b?.currency || ""),
               cash: Number(b?.cash || 0),
             }))
@@ -187,7 +192,7 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
         return {
           account_id: String(acc.account_id || ""),
           account_name: String(acc.account_name || "Brokerage Account"),
-          positions: positions.filter((p: any) => p.units > 0 && p.ticker !== "UNK"),
+          positions: positions.filter((p: Position) => p.units > 0 && p.ticker !== "UNK"),
           balances,
           debug: acc.debug,
         };
@@ -379,7 +384,7 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
                       Balances
                     </h3>
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {account.balances.map((b: any, i: number) => (
+                      {account.balances.map((b: Balance, i: number) => (
                         <div
                           key={`${b.currency}-${i}`}
                           className="bg-black/40 border border-white/5 rounded-2xl p-6 group hover:border-yellow-400/20 transition-colors"
@@ -410,7 +415,7 @@ export default function PortfolioClient({ initialPortfolio, initialSnapshots }: 
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
-                        {account.positions.map((p: any, i: number) => {
+                        {account.positions.map((p: Position, i: number) => {
                           const pnlPositive = p.open_pnl >= 0;
                           return (
                             <tr
