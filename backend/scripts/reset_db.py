@@ -6,7 +6,6 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'vspp.settings')
 django.setup()
 
 from django.contrib.auth.models import User
-from core.models import UserProfile, Pitch
 from snaptrade_client import SnapTrade
 
 print("Starting FINAL database wipe...")
