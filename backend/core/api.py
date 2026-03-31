@@ -162,17 +162,29 @@ def snaptrade_connect(request):
         except Exception as e:
             err_str = str(e)
             if "Personal keys can only register one user" in err_str or "1012" in err_str:
-                # Personal Key Limit Hit: The Render DB is fresh but Snaptrade remembers the old local user.
-                # Because we lost the old secret, that user is orphaned. Delete it and retry.
+                # Personal Key Limit Hit
+                import time
                 try:
                     users_res = snaptrade.authentication.list_snap_trade_users()
-                    for old_uid in getattr(users_res, 'body', []):
-                        snaptrade.authentication.delete_snap_trade_user(user_id=old_uid)
+                    # SDK versions differ: some return ApiResponse (w/ .body), some return the list directly
+                    users_list = getattr(users_res, 'body', users_res)
+                    if not isinstance(users_list, list):
+                        users_list = [users_list] if users_list else []
+                    
+                    # Delete them all
+                    for old_uid in users_list:
+                        uid_str = old_uid.get('userId') if isinstance(old_uid, dict) else str(old_uid)
+                        if uid_str:
+                            snaptrade.authentication.delete_snap_trade_user(user_id=uid_str)
+                    
+                    # Wait 1.5 seconds for SnapTrade servers to clear the quota
+                    time.sleep(1.5)
                     
                     # Retry registration
                     retry_res = snaptrade.authentication.register_snap_trade_user(user_id=user_id)
-                    profile.snaptrade_user_id = retry_res.body['userId']
-                    profile.snaptrade_secret = retry_res.body['userSecret']
+                    retry_body = getattr(retry_res, 'body', retry_res)
+                    profile.snaptrade_user_id = retry_body['userId']
+                    profile.snaptrade_secret = retry_body['userSecret']
                     profile.save()
                 except Exception as inner_e:
                     return {"error": f"Failed to reset personal key space: {inner_e}"}
