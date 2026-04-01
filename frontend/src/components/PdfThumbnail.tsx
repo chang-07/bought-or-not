@@ -1,12 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { Document, Page, pdfjs } from "react-pdf";
-import { Download, FileText, ChevronRight, ShieldCheck } from "lucide-react";
+import { Download, ChevronRight, ShieldCheck } from "lucide-react";
 import { motion } from "framer-motion";
-
-// Configure worker for react-pdf
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface PdfThumbnailProps {
   url: string;
@@ -14,24 +9,13 @@ interface PdfThumbnailProps {
 }
 
 export default function PdfThumbnail({ url, ticker }: PdfThumbnailProps) {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [numPages, setNumPages] = useState<number>();
-
-  function onDocumentLoadSuccess({ numPages }: { numPages: number }) {
-    setNumPages(numPages);
-  }
-
   const absoluteUrl = url.startsWith('/') 
     ? `${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}${url}`
     : url;
 
   const handleDownload = () => {
-    const link = document.createElement("a");
-    link.href = absoluteUrl;
-    link.download = `${ticker}_Pitch_Deck.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Rely on the browser's native PDF viewer in a new tab for seamless access
+    window.open(absoluteUrl, '_blank');
   };
 
   return (
@@ -41,32 +25,15 @@ export default function PdfThumbnail({ url, ticker }: PdfThumbnailProps) {
       className="relative group cursor-pointer overflow-hidden bg-black/40 border border-white/5 group-hover:border-yellow-400/30 transition-all duration-500 rounded-2xl" 
       onClick={handleDownload}
     >
-      <div className="flex justify-center items-center h-[350px] sm:h-[420px] overflow-hidden transition-all duration-700 group-hover:scale-[1.05] group-hover:blur-[2px]">
-        <Document
-          file={absoluteUrl}
-          onLoadSuccess={onDocumentLoadSuccess}
-          loading={
-            <div className="flex flex-col items-center gap-4">
-              <div className="w-10 h-10 border-4 border-yellow-400/20 border-t-yellow-400 rounded-full animate-spin" />
-              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 animate-pulse">Establishing Intel Feed...</span>
-            </div>
-          }
-          error={
-            <div className="text-center p-12 grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all">
-              <FileText className="w-16 h-16 text-yellow-400 mx-auto mb-4" />
-              <p className="text-[10px] font-black uppercase tracking-widest text-gray-600">Artifact Preview Unavailable</p>
-              <p className="text-[9px] font-bold text-yellow-400/50 mt-2 uppercase tracking-wider">Click for Direct Access</p>
-            </div>
-          }
-        >
-          <Page
-            pageNumber={1}
-            height={420}
-            renderAnnotationLayer={false}
-            renderTextLayer={false}
-            className="max-w-full h-auto object-cover opacity-80 group-hover:opacity-100 transition-opacity duration-500"
+      <div className="flex justify-center items-center h-[350px] sm:h-[420px] overflow-hidden transition-all duration-700 bg-zinc-900/50">
+        <div className="w-full h-full pointer-events-none group-hover:scale-[1.05] group-hover:blur-[2px] transition-all duration-700 opacity-90">
+          {/* Native HTML5 Iframe bypasses all Canvas parsing bugs and guarantees a preview */}
+          <iframe 
+            src={`${absoluteUrl}#toolbar=0&navpanes=0&scrollbar=0&view=FitH`} 
+            className="w-full h-full border-none pointer-events-none"
+            title={`${ticker} Pitch Deck Preview`}
           />
-        </Document>
+        </div>
       </div>
 
       {/* Tactical UI Overlay */}
