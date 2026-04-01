@@ -633,40 +633,23 @@ def get_my_pitches_analytics(request):
     }
 
 
+from django.views.decorators.clickjacking import xframe_options_exempt
+
 @router.get("/pitches/{pitch_id}/deck")
+@xframe_options_exempt
 def get_pitch_deck(request, pitch_id: int):
     try:
         pitch = Pitch.objects.get(id=pitch_id)
         attachment = pitch.attachments.first()
-        from django.http import StreamingHttpResponse
-        import requests
+        from django.http import HttpResponseRedirect
         
         if attachment.file:
-            s3_url = attachment.file.url
-            
-            raw_type = str(attachment.file_type or "").lower().strip()
-            filename = str(attachment.file_name or f"pitch_{pitch_id}_deck")
-
-            if "pdf" in raw_type or filename.lower().endswith(".pdf"):
-                content_type = "application/pdf"
-            elif "powerpoint" in raw_type or filename.lower().endswith(".pptx"):
-                content_type = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
-            elif "presentation" in raw_type or filename.lower().endswith(".ppt"):
-                content_type = "application/vnd.ms-powerpoint"
-            else:
-                content_type = "application/octet-stream"
-
-            r = requests.get(s3_url, stream=True)
-            if r.status_code != 200:
-                print(f"Error fetching from S3: {r.status_code} - {r.text[:100]}")
-                return {"error": f"Artifact access restricted or unavailable (HTTP {r.status_code})"}
-
-            response = StreamingHttpResponse(r.iter_content(chunk_size=8192), content_type=content_type)
-            
-            response["Content-Disposition"] = f'inline; filename="{filename}"'
-            response["X-Content-Type-Options"] = "nosniff"
-            response["Cross-Origin-Resource-Policy"] = "cross-origin"
-            return response
+            s3_url = "UNKNOWN"
+            try:
+                s3_url = attachment.file.url
+                return HttpResponseRedirect(s3_url)
+            except Exception as inner_e:
+                return {"error": f"Failed to resolve S3 signature: {str(inner_e)}"}
             
         return {"error": "File not accessible"}
     except Pitch.DoesNotExist:
