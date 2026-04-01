@@ -15,10 +15,18 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.urls import path, re_path
+from django.conf import settings
+from django.views.static import serve
+import os
 from vspp.api import api
+
+from django.views.decorators.clickjacking import xframe_options_exempt
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/', api.urls),
+    # Explicitly serve media files natively in production to support local Docker deployments without S3
+    re_path(r'^media/(?P<path>.*)$', xframe_options_exempt(serve), {'document_root': settings.MEDIA_ROOT}),
+    re_path(r'^pitch_decks/(?P<path>.*)$', xframe_options_exempt(serve), {'document_root': os.path.join(settings.MEDIA_ROOT, 'pitch_decks')}),
 ]
