@@ -27,12 +27,12 @@ def seed_db():
     Pitch.objects.filter(author__in=[p1, p2]).delete()
 
     import requests
-    from django.conf import settings
+    import os
     from core.tasks import update_alpha_scores
 
     def get_live_open_price(ticker):
         try:
-            url = f"https://finnhub.io/api/v1/quote?symbol={ticker}&token={settings.FINNHUB_API_KEY}"
+            url = f"https://finnhub.io/api/v1/quote?symbol={ticker}&token={os.getenv('FINNHUB_API_KEY', '')}"
             res = requests.get(url, timeout=5)
             data = res.json()
             val = float(data.get("o", 0) or 0)
@@ -84,7 +84,7 @@ def seed_db():
             try:
                 # Need to keep file open until the field saves it
                 with open(pdf_path, 'rb') as f:
-                    django_file = File(f)
+                    django_file = File(f, name=filename)
                     PitchAttachment.objects.create(
                         pitch=pitch,
                         file=django_file,  # Django-storages handles the S3 upload
