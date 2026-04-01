@@ -26,71 +26,51 @@ def seed_db():
     # Delete existing to prevent duplication on multiple runs
     Pitch.objects.filter(author__in=[p1, p2]).delete()
 
-    pitch1 = Pitch.objects.create(
-        author=p1,
-        ticker='ATZ',
-        target_price=55.00,
-        content_body='Aritzia demonstrates strong brand momentum and successful geographic expansion into the US market. Superior unit economics compared to traditional apparel retail.',
-        is_verified=True,
-        entry_price=40.00,
-        current_alpha=8.4,
-        spy_entry_price=450.00
-    )
+    import requests
+    from django.conf import settings
+    from core.tasks import update_alpha_scores
 
-    pitch2 = Pitch.objects.create(
-        author=p2,
-        ticker='CSU',
-        target_price=3500.00,
-        content_body='Constellation Software maintains an unparalleled track record of disciplined capital allocation and compounding through programmatic VMS acquisitions.',
-        is_verified=True,
-        entry_price=2800.00,
-        current_alpha=15.2,
-        spy_entry_price=450.00
-    )
+    def get_live_open_price(ticker):
+        try:
+            url = f"https://finnhub.io/api/v1/quote?symbol={ticker}&token={settings.FINNHUB_API_KEY}"
+            res = requests.get(url, timeout=5)
+            data = res.json()
+            val = float(data.get("o", 0) or 0)
+            return val if val > 0 else 100.0 # fallback
+        except Exception:
+            return 100.0
 
-    pitch3 = Pitch.objects.create(
-        author=p1,
-        ticker='EHC',
-        target_price=110.00,
-        content_body='Encompass Health is positioned to benefit from aging demographics and continuous shift toward inpatient rehabilitation facilities.',
-        is_verified=True,
-        entry_price=85.00,
-        current_alpha=5.1,
-        spy_entry_price=450.00
-    )
+    print("Fetching live market open prices from Finnhub...")
+    spy_open = get_live_open_price("SPY")
 
-    pitch4 = Pitch.objects.create(
-        author=p2,
-        ticker='INVH',
-        target_price=45.00,
-        content_body='Invitation Homes commands significant pricing power in the single-family rental market amidst structural national housing shortages.',
-        is_verified=True,
-        entry_price=34.00,
-        current_alpha=3.8,
-        spy_entry_price=450.00
-    )
+    pitch_configs = [
+        (p1, 'ATZ', 55.00, 'Aritzia demonstrates strong brand momentum and successful geographic expansion into the US market. Superior unit economics compared to traditional apparel retail.'),
+        (p2, 'CSU', 3500.00, 'Constellation Software maintains an unparalleled track record of disciplined capital allocation and compounding through programmatic VMS acquisitions.'),
+        (p1, 'EHC', 110.00, 'Encompass Health is positioned to benefit from aging demographics and continuous shift toward inpatient rehabilitation facilities.'),
+        (p2, 'INVH', 45.00, 'Invitation Homes commands significant pricing power in the single-family rental market amidst structural national housing shortages.'),
+        (p1, 'OWL', 25.00, 'Blue Owl Capital offers high structural growth in private credit. Alternative asset managers are capturing massive market share from traditional banking.'),
+        (p2, 'SENEA', 75.00, 'Seneca Foods is a deeply undervalued, asset-rich agricultural player. Counter-cyclical properties provide a robust margin of safety.')
+    ]
 
-    pitch5 = Pitch.objects.create(
-        author=p1,
-        ticker='OWL',
-        target_price=25.00,
-        content_body='Blue Owl Capital offers high structural growth in private credit. Alternative asset managers are capturing massive market share from traditional banking.',
-        is_verified=True,
-        entry_price=18.00,
-        current_alpha=11.5,
-        spy_entry_price=450.00
-    )
+    pitches = []
+    for author, ticker, target, body in pitch_configs:
+        entry = get_live_open_price(ticker)
+        pitch = Pitch.objects.create(
+            author=author,
+            ticker=ticker,
+            target_price=target,
+            content_body=body,
+            is_verified=True,
+            entry_price=entry,
+            current_alpha=0.0, # Will be synchronized below
+            spy_entry_price=spy_open
+        )
+        pitches.append(pitch)
 
-    pitch6 = Pitch.objects.create(
-        author=p2,
-        ticker='SENEA',
-        target_price=75.00,
-        content_body='Seneca Foods is a deeply undervalued, asset-rich agricultural player. Counter-cyclical properties provide a robust margin of safety.',
-        is_verified=True,
-        entry_price=50.00,
-        current_alpha=9.2,
-        spy_entry_price=450.00
-    )
+    try:
+        pitch1, pitch2, pitch3, pitch4, pitch5, pitch6 = pitches
+    except ValueError:
+        pass
 
     from core.models import PitchAttachment
     from django.core.files import File
@@ -123,6 +103,12 @@ def seed_db():
     attach_pdf(pitch4, 'INVH-Pitch.pdf')
     attach_pdf(pitch5, 'OWL+Deck.pdf')
     attach_pdf(pitch6, 'SENEA_IND_vFINAL.pdf')
+
+    try:
+        print("Synchronizing Alpha metrics with live Finnhub market data...")
+        update_alpha_scores()
+    except Exception as e:
+        print(f"Failed to calculate Alpha scores: {e}")
 
     print(f"Successfully seeded 6 authentic pitches with AWS S3 deck attachments for authors WarrenBuffett and CathieWood.")
 
