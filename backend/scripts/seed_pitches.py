@@ -28,38 +28,103 @@ def seed_db():
 
     pitch1 = Pitch.objects.create(
         author=p1,
-        ticker='AAPL',
-        target_price=250.00,
-        content_body='The transition to services revenue provides durable moat. AI supercycle on the newest iPhones will drive unexpected hardware upgrades across the stagnant user base. Sitting on an insurmountable pile of cash flow.',
+        ticker='ATZ',
+        target_price=55.00,
+        content_body='Aritzia demonstrates strong brand momentum and successful geographic expansion into the US market. Superior unit economics compared to traditional apparel retail.',
         is_verified=True,
-        entry_price=175.50,
-        current_alpha=12.4, # 12.4% outperformance against SPY
+        entry_price=40.00,
+        current_alpha=8.4,
         spy_entry_price=450.00
     )
 
     pitch2 = Pitch.objects.create(
         author=p2,
-        ticker='TSLA',
-        target_price=350.00,
-        content_body='The Robotaxi network and FSD V12 unlock a multi-trillion dollar TAM previously unpriced by legacy automotive analysts. Battery storage deployments growing exponentially year over year.',
+        ticker='CSU',
+        target_price=3500.00,
+        content_body='Constellation Software maintains an unparalleled track record of disciplined capital allocation and compounding through programmatic VMS acquisitions.',
         is_verified=True,
-        entry_price=210.00,
-        current_alpha=-3.2, # Underperforming SPY temporarily
-        spy_entry_price=470.00
+        entry_price=2800.00,
+        current_alpha=15.2,
+        spy_entry_price=450.00
     )
 
     pitch3 = Pitch.objects.create(
         author=p1,
-        ticker='KO',
-        target_price=80.00,
-        content_body='Classic defensive stock with unparalleled pricing power and global distribution. Consistent dividend aristocrat operating in an inflation-resilient bracket.',
+        ticker='EHC',
+        target_price=110.00,
+        content_body='Encompass Health is positioned to benefit from aging demographics and continuous shift toward inpatient rehabilitation facilities.',
         is_verified=True,
-        entry_price=60.00,
-        current_alpha=4.1,
-        spy_entry_price=480.00
+        entry_price=85.00,
+        current_alpha=5.1,
+        spy_entry_price=450.00
     )
 
-    print(f"Successfully seeded 3 verified pitches for authors WarrenBuffett and CathieWood.")
+    pitch4 = Pitch.objects.create(
+        author=p2,
+        ticker='INVH',
+        target_price=45.00,
+        content_body='Invitation Homes commands significant pricing power in the single-family rental market amidst structural national housing shortages.',
+        is_verified=True,
+        entry_price=34.00,
+        current_alpha=3.8,
+        spy_entry_price=450.00
+    )
+
+    pitch5 = Pitch.objects.create(
+        author=p1,
+        ticker='OWL',
+        target_price=25.00,
+        content_body='Blue Owl Capital offers high structural growth in private credit. Alternative asset managers are capturing massive market share from traditional banking.',
+        is_verified=True,
+        entry_price=18.00,
+        current_alpha=11.5,
+        spy_entry_price=450.00
+    )
+
+    pitch6 = Pitch.objects.create(
+        author=p2,
+        ticker='SENEA',
+        target_price=75.00,
+        content_body='Seneca Foods is a deeply undervalued, asset-rich agricultural player. Counter-cyclical properties provide a robust margin of safety.',
+        is_verified=True,
+        entry_price=50.00,
+        current_alpha=9.2,
+        spy_entry_price=450.00
+    )
+
+    from core.models import PitchAttachment
+    from django.core.files import File
+
+    def attach_pdf(pitch, filename):
+        # Resolve the root repo directory
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+        pdf_path = os.path.join(base_dir, filename)
+        
+        if os.path.exists(pdf_path):
+            try:
+                # Need to keep file open until the field saves it
+                with open(pdf_path, 'rb') as f:
+                    django_file = File(f)
+                    PitchAttachment.objects.create(
+                        pitch=pitch,
+                        file=django_file,  # Django-storages handles the S3 upload
+                        file_name=filename,
+                        file_size_bytes=os.path.getsize(pdf_path),
+                        file_type="application/pdf"
+                    )
+            except Exception as e:
+                print(f"Warning: Failed to attach {filename} to {pitch.ticker}: {e}")
+        else:
+            print(f"Notice: {filename} not found in root directory, skipping attachment.")
+
+    attach_pdf(pitch1, 'CRG_ATZ_vF.pdf')
+    attach_pdf(pitch2, 'CSU_TMT_vF.pdf')
+    attach_pdf(pitch3, 'EHC+Long+-+Deck.pdf')
+    attach_pdf(pitch4, 'INVH-Pitch.pdf')
+    attach_pdf(pitch5, 'OWL+Deck.pdf')
+    attach_pdf(pitch6, 'SENEA_IND_vFINAL.pdf')
+
+    print(f"Successfully seeded 6 authentic pitches with AWS S3 deck attachments for authors WarrenBuffett and CathieWood.")
 
 if __name__ == '__main__':
     seed_db()
