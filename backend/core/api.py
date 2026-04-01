@@ -657,6 +657,10 @@ def get_pitch_deck(request, pitch_id: int):
                 content_type = "application/octet-stream"
 
             r = requests.get(s3_url, stream=True)
+            if r.status_code != 200:
+                print(f"Error fetching from S3: {r.status_code} - {r.text[:100]}")
+                return {"error": f"Artifact access restricted or unavailable (HTTP {r.status_code})"}
+
             response = StreamingHttpResponse(r.iter_content(chunk_size=8192), content_type=content_type)
             
             response["Content-Disposition"] = f'inline; filename="{filename}"'
