@@ -76,9 +76,9 @@ def seed_db():
     from django.core.files import File
 
     def attach_pdf(pitch, filename):
-        # Resolve the root repo directory
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-        pdf_path = os.path.join(base_dir, filename)
+        # Resolve the backend repo directory instead of outer repository
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        pdf_path = os.path.join(base_dir, 'seed-assets', filename)
         
         if os.path.exists(pdf_path):
             try:
