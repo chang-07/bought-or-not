@@ -638,13 +638,32 @@ def get_pitch_deck(request, pitch_id: int):
     try:
         pitch = Pitch.objects.get(id=pitch_id)
         attachment = pitch.attachments.first()
-        if not attachment or not attachment.file:
-            return {"error": "Deck not found"}
-
-        from django.http import HttpResponseRedirect
+        from django.http import StreamingHttpResponse
+        import requests
         
         if attachment.file:
-            return HttpResponseRedirect(attachment.file.url)
+            s3_url = attachment.file.url
+            
+            raw_type = str(attachment.file_type or "").lower().strip()
+            filename = str(attachment.file_name or f"pitch_{pitch_id}_deck")
+
+            if "pdf" in raw_type or filename.lower().endswith(".pdf"):
+                content_type = "application/pdf"
+            elif "powerpoint" in raw_type or filename.lower().endswith(".pptx"):
+                content_type = "application/vnd.openxmlformats-officedocument.presentationml.presentation"
+            elif "presentation" in raw_type or filename.lower().endswith(".ppt"):
+                content_type = "application/vnd.ms-powerpoint"
+            else:
+                content_type = "application/octet-stream"
+
+            r = requests.get(s3_url, stream=True)
+            response = StreamingHttpResponse(r.iter_content(chunk_size=8192), content_type=content_type)
+            
+            response["Content-Disposition"] = f'inline; filename="{filename}"'
+            response["X-Content-Type-Options"] = "nosniff"
+            response["Cross-Origin-Resource-Policy"] = "cross-origin"
+            return response
+            
         return {"error": "File not accessible"}
     except Pitch.DoesNotExist:
         return {"error": "Pitch not found"}
