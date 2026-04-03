@@ -14,3 +14,5 @@ gunicorn
 dj-database-url
 whitenoise
 pytz
+ruff
+ruff

@@ -38,7 +38,6 @@ type MyPitchAnalytics = {
     active_pitches: number;
     verified_pitches: number;
     closed_pitches: number;
-    win_rate: number;
   };
   pitches: MyPitch[];
   error?: string;
@@ -201,11 +200,6 @@ export default function MyPitchesClient({ initialData }: { initialData: MyPitchA
                 label="Verified Pitches"
                 value={data.author.verified_pitches}
                 icon={<ShieldCheck />}
-              />
-              <StatCard
-                label="Accuracy Rating"
-                value={`${data.author.win_rate.toFixed(1)}%`}
-                icon={<Target />}
               />
             </section>
 

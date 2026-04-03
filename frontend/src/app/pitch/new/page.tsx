@@ -150,15 +150,12 @@ export default function NewPitchPage() {
 
     try {
       const payload = new FormData();
-      payload.append(
-        "payload",
-        JSON.stringify({
-          ticker: formData.ticker.trim().toUpperCase(),
-          target_price: parseFloat(formData.targetPrice),
-          content_body: formData.contentBody,
-        }),
-      );
-      payload.append("deck", file);
+      payload.append("ticker", formData.ticker.trim().toUpperCase());
+      payload.append("target_price", formData.targetPrice);
+      payload.append("content_body", formData.contentBody);
+      if (file) {
+        payload.append("deck", file);
+      }
 
       const res = await api.post("/api/pitches", payload, {
         headers: { "Content-Type": "multipart/form-data" },
