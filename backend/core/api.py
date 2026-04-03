@@ -476,36 +476,6 @@ def get_pre_trade_impact(request, pitch_id: int, units: float = 1.0):
                 units=units,
             ).body
         )
-        if not accounts_raw:
-            return _api_error("No brokerage accounts found")
-
-        account_id = str(accounts_raw[0]["id"])
-
-        symbols_raw = sdk_to_python(
-            snaptrade.reference_data.symbol_search_user_account(
-                user_id=str(profile.snaptrade_user_id),
-                user_secret=profile.snaptrade_secret,
-                account_id=account_id,
-                substring=pitch.ticker,
-            ).body
-        )
-        if not symbols_raw:
-            return _api_error(f"Symbol {pitch.ticker} not tradable on this brokerage")
-
-        symbol_id = str(symbols_raw[0]["id"])
-
-        impact_raw = sdk_to_python(
-            snaptrade.trading.get_order_impact(
-                user_id=str(profile.snaptrade_user_id),
-                user_secret=profile.snaptrade_secret,
-                account_id=account_id,
-                action="BUY",
-                order_type="Market",
-                time_in_force="Day",
-                universal_symbol_id=symbol_id,
-                units=units,
-            ).body
-        )
 
         trade = impact_raw.get("trade") or {}
         trade_impacts = impact_raw.get("trade_impacts") or []
