@@ -2,7 +2,10 @@ import AuthorClient from "./AuthorClient";
 
 export default async function AuthorProfilePage({ params }: { params: Promise<{ username: string }> }) {
   const username = (await params).username;
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://127.0.0.1:8000";
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+  if (!API_URL) {
+    return <AuthorClient initialProfile={{ author: null, pitches: [], error: "NEXT_PUBLIC_API_URL not set" }} username={username} />;
+  }
 
   let initialProfile = { author: null, pitches: [], error: "" };
 

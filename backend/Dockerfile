@@ -26,4 +26,4 @@ COPY . /app/
 RUN python manage.py collectstatic --noinput
 
 # Automate migrations, seed data, and start gunicorn
-CMD sh -c "python manage.py migrate && python scripts/seed_pitches.py || true && python manage.py createsuperuser --noinput || true && gunicorn vspp.wsgi:application --bind 0.0.0.0:8000"
+CMD sh -c "python manage.py migrate && python scripts/seed_pitches.py && python manage.py createsuperuser --noinput || echo 'Superuser creation skipped (set DJANGO_SUPERUSER_* env vars)' && gunicorn vspp.wsgi:application --bind 0.0.0.0:8000"

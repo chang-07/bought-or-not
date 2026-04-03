@@ -40,7 +40,7 @@ export default function AuthPage() {
           router.push('/dashboard');
         }
       } else {
-        setError(isLogin ? 'Invalid credentials' : 'Username already exists');
+        setError(res.data.error || (isLogin ? 'Invalid credentials' : 'Signup failed'));
       }
     } catch {
       setError('Connection error to server.');
