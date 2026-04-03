@@ -157,9 +157,7 @@ export default function NewPitchPage() {
         payload.append("deck", file);
       }
 
-      const res = await api.post("/api/pitches", payload, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      const res = await api.post("/api/pitches", payload);
 
       if (res.data.success) {
         setSuccess("Upload successful. Awaiting verification...");
