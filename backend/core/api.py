@@ -424,7 +424,7 @@ def get_pitch_deck(request, pitch_id: int):
 
 
 @router.get("/trade/impact/{pitch_id}")
-def get_pre_trade_impact(request, pitch_id: int):
+def get_pre_trade_impact(request, pitch_id: int, units: float = 1.0):
     try:
         profile = UserProfile.objects.get(user=request.user)
         if not profile.snaptrade_secret or not profile.snaptrade_user_id:
@@ -473,7 +473,37 @@ def get_pre_trade_impact(request, pitch_id: int):
                 order_type="Market",
                 time_in_force="Day",
                 universal_symbol_id=symbol_id,
-                units=1.0,
+                units=units,
+            ).body
+        )
+        if not accounts_raw:
+            return _api_error("No brokerage accounts found")
+
+        account_id = str(accounts_raw[0]["id"])
+
+        symbols_raw = sdk_to_python(
+            snaptrade.reference_data.symbol_search_user_account(
+                user_id=str(profile.snaptrade_user_id),
+                user_secret=profile.snaptrade_secret,
+                account_id=account_id,
+                substring=pitch.ticker,
+            ).body
+        )
+        if not symbols_raw:
+            return _api_error(f"Symbol {pitch.ticker} not tradable on this brokerage")
+
+        symbol_id = str(symbols_raw[0]["id"])
+
+        impact_raw = sdk_to_python(
+            snaptrade.trading.get_order_impact(
+                user_id=str(profile.snaptrade_user_id),
+                user_secret=profile.snaptrade_secret,
+                account_id=account_id,
+                action="BUY",
+                order_type="Market",
+                time_in_force="Day",
+                universal_symbol_id=symbol_id,
+                units=units,
             ).body
         )
 
@@ -716,7 +746,17 @@ def get_my_pitches_analytics(request):
 
 @router.get("/portfolio")
 def get_portfolio(request):
-    profile = UserProfile.objects.get(user=request.user)
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        return _api_error("User profile not found")
+    if not profile.snaptrade_secret or not profile.snaptrade_user_id:
+        return _api_error("SnapTrade account not connected")
+
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        return _api_error("User profile not found")
     if not profile.snaptrade_secret or not profile.snaptrade_user_id:
         return _api_error("SnapTrade account not connected")
 
@@ -811,7 +851,10 @@ def get_portfolio(request):
 def get_portfolio_history(request):
     """Fetch portfolio activities and return-rate history from SnapTrade."""
 
-    profile = UserProfile.objects.get(user=request.user)
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        return _api_error("User profile not found")
     if not profile.snaptrade_secret or not profile.snaptrade_user_id:
         return _api_error("SnapTrade account not connected")
 
