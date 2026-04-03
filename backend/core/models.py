@@ -8,6 +8,13 @@ class UserProfile(models.Model):
     snaptrade_secret = models.CharField(max_length=255, null=True, blank=True)
     total_alpha = models.DecimalField(max_digits=10, decimal_places=4, default=0.0)
     win_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0.0)
+    auth_token = models.CharField(max_length=64, null=True, blank=True, unique=True, db_index=True)
+
+    def rotate_token(self):
+        """Generate a new auth token and persist it."""
+        self.auth_token = uuid.uuid4().hex
+        self.save(update_fields=['auth_token'])
+        return self.auth_token
 
     def __str__(self):
         return f"{self.user.username}'s Profile"

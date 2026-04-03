@@ -3,7 +3,7 @@ import json
 import frozendict
 from ninja import Router, Schema, File
 from ninja.files import UploadedFile
-from django.contrib.auth import authenticate, login as django_login, logout as django_logout
+from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from .models import UserProfile, Pitch, PitchAttachment
 from .tasks import verify_pitch_holdings, update_alpha_scores
@@ -90,26 +90,31 @@ class AuthResponse(Schema):
     user_id: int | None = None
     username: str | None = None
     snaptrade_connected: bool = False
+    token: str | None = None
 
 
-@router.post("/login", response=AuthResponse)
+@router.post("/login", response=AuthResponse, auth=None)
 def login(request, payload: LoginSchema):
     user = authenticate(request, username=payload.username, password=payload.password)
     if user is not None:
-        django_login(request, user)
         profile, _ = UserProfile.objects.get_or_create(user=user)
+        token = profile.auth_token or profile.rotate_token()
         return {
             "success": True,
             "user_id": int(user.id),
             "username": str(user.username),
             "snaptrade_connected": bool(profile.snaptrade_secret),
+            "token": token,
         }
     return {"success": False}
 
 
 @router.post("/logout")
 def logout(request):
-    django_logout(request)
+    # Invalidate the token so it can't be reused
+    profile, _ = UserProfile.objects.get_or_create(user=request.user)
+    profile.auth_token = None
+    profile.save(update_fields=['auth_token'])
     return {"success": True}
 
 
@@ -119,7 +124,7 @@ class CreateUserSchema(Schema):
     email: str
 
 
-@router.post("/signup", response=AuthResponse)
+@router.post("/signup", response=AuthResponse, auth=None)
 def signup(request, payload: CreateUserSchema):
     if User.objects.filter(username=payload.username).exists():
         return {"success": False}
@@ -128,13 +133,14 @@ def signup(request, payload: CreateUserSchema):
         email=payload.email,
         password=payload.password,
     )
-    django_login(request, user)
-    UserProfile.objects.get_or_create(user=user)
+    profile, _ = UserProfile.objects.get_or_create(user=user)
+    token = profile.rotate_token()
     return {
         "success": True,
         "user_id": int(user.id),
         "username": str(user.username),
         "snaptrade_connected": False,
+        "token": token,
     }
 
 
@@ -145,8 +151,6 @@ def signup(request, payload: CreateUserSchema):
 @router.post("/snaptrade/connect")
 def snaptrade_connect(request):
     """Generates a SnapTrade Connection Portal URL for the logged-in user."""
-    if not request.user.is_authenticated:
-        return {"error": "Not authenticated"}
 
     profile = UserProfile.objects.get(user=request.user)
 
@@ -208,7 +212,7 @@ def snaptrade_connect(request):
 # Stocks
 # ---------------------------------------------------------------------------
 
-@router.get("/stocks/search")
+@router.get("/stocks/search", auth=None)
 def search_stocks(request, q: str = ""):
     """
     Search stocks by ticker/name for typeahead in the pitch form.
@@ -253,8 +257,6 @@ class PitchCreateSchema(Schema):
 
 @router.post("/pitches")
 def create_pitch(request, payload: PitchCreateSchema, deck: UploadedFile = File(None)):
-    if not request.user.is_authenticated:
-        return {"error": "Not authenticated"}
 
     profile = UserProfile.objects.get(user=request.user)
 
@@ -301,7 +303,7 @@ class PitchResponseSchema(Schema):
     deck_url: str | None
 
 
-@router.get("/pitches", response=list[PitchResponseSchema])
+@router.get("/pitches", response=list[PitchResponseSchema], auth=None)
 def get_pitches(request, search: str = None):
     # Public feed: all ACTIVE pitches (verified and pending), newest first.
     pitches = Pitch.objects.select_related('author__user').prefetch_related('attachments').filter(status='ACTIVE').order_by('-created_at')
@@ -345,8 +347,6 @@ def get_pitches(request, search: str = None):
 
 @router.post("/pitches/{pitch_id}/hide")
 def hide_pitch(request, pitch_id: int):
-    if not request.user.is_authenticated:
-        return {"error": "Not authenticated"}
     try:
         profile = UserProfile.objects.get(user=request.user)
         pitch = Pitch.objects.get(id=pitch_id)
@@ -358,8 +358,6 @@ def hide_pitch(request, pitch_id: int):
 
 @router.post("/pitches/restore_all")
 def restore_all_pitches(request):
-    if not request.user.is_authenticated:
-        return {"error": "Not authenticated"}
     try:
         profile = UserProfile.objects.get(user=request.user)
         from .models import HiddenPitch
@@ -375,8 +373,6 @@ def restore_all_pitches(request):
 
 @router.get("/trade/impact/{pitch_id}")
 def get_pre_trade_impact(request, pitch_id: int):
-    if not request.user.is_authenticated:
-        return {"error": "Not authenticated"}
 
     try:
         profile = UserProfile.objects.get(user=request.user)
@@ -483,8 +479,6 @@ class ExecuteTradeSchema(Schema):
 
 @router.post("/trade/execute/{pitch_id}")
 def execute_trade(request, pitch_id: int, payload: ExecuteTradeSchema):
-    if not request.user.is_authenticated:
-        return {"error": "Not authenticated"}
 
     try:
         profile = UserProfile.objects.get(user=request.user)
@@ -543,7 +537,7 @@ def execute_trade(request, pitch_id: int, payload: ExecuteTradeSchema):
 # Author profile
 # ---------------------------------------------------------------------------
 
-@router.get("/author/{username}")
+@router.get("/author/{username}", auth=None)
 def get_author_profile(request, username: str):
     from django.db.models import Avg
 
@@ -589,9 +583,6 @@ def get_author_profile(request, username: str):
 def get_my_pitches_analytics(request):
     from django.db.models import Avg
 
-    if not request.user.is_authenticated:
-        return {"error": "Not authenticated"}
-
     profile, _ = UserProfile.objects.get_or_create(user=request.user)
     pitches = Pitch.objects.select_related('author__user').prefetch_related('attachments').filter(author=profile).order_by('-created_at')
 
@@ -635,7 +626,7 @@ def get_my_pitches_analytics(request):
 
 from django.views.decorators.clickjacking import xframe_options_exempt
 
-@router.get("/pitches/{pitch_id}/deck")
+@router.get("/pitches/{pitch_id}/deck", auth=None)
 @xframe_options_exempt
 def get_pitch_deck(request, pitch_id: int):
     try:
@@ -662,8 +653,6 @@ def get_pitch_deck(request, pitch_id: int):
 
 @router.get("/portfolio")
 def get_portfolio(request):
-    if not request.user.is_authenticated:
-        return {"error": "Not authenticated"}
 
     profile = UserProfile.objects.get(user=request.user)
     if not profile.snaptrade_secret or not profile.snaptrade_user_id:
@@ -759,8 +748,6 @@ class SellTradeSchema(Schema):
 
 @router.post("/trade/sell")
 def sell_trade(request, payload: SellTradeSchema):
-    if not request.user.is_authenticated:
-        return {"error": "Not authenticated"}
 
     try:
         profile = UserProfile.objects.get(user=request.user)
@@ -808,8 +795,6 @@ def sell_trade(request, payload: SellTradeSchema):
 @router.post("/alpha/refresh")
 def refresh_alpha(request):
     """Run a synchronous Finnhub alpha update for all active verified pitches."""
-    if not request.user.is_authenticated:
-        return {"error": "Not authenticated"}
 
     try:
         update_alpha_scores.delay()
@@ -830,8 +815,6 @@ def refresh_alpha(request):
 @router.get("/portfolio/history")
 def get_portfolio_history(request):
     """Fetch portfolio activities and return-rate history from SnapTrade."""
-    if not request.user.is_authenticated:
-        return {"error": "Not authenticated"}
 
     profile = UserProfile.objects.get(user=request.user)
     if not profile.snaptrade_secret or not profile.snaptrade_user_id:

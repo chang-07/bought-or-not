@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import api from "@/lib/api";
+import api, { clearAuthToken } from "@/lib/api";
 import { motion } from "framer-motion";
 import {
   Home,
@@ -22,6 +22,7 @@ export default function TopNav() {
     } catch (err) {
       console.error("Secure logout proxy failed:", err);
     } finally {
+      clearAuthToken();
       window.location.href = "/";
     }
   };

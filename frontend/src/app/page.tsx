@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, Lock, Mail, User as UserIcon, ArrowRight, ShieldCheck } from 'lucide-react';
-import api from '@/lib/api';
+import api, { setAuthToken } from '@/lib/api';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
@@ -31,6 +31,9 @@ export default function AuthPage() {
       const res = await api.post(endpoint, formData);
 
       if (res.data.success) {
+        if (res.data.token) {
+          setAuthToken(res.data.token);
+        }
         if (!res.data.snaptrade_connected) {
           router.push('/onboarding');
         } else {

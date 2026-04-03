@@ -137,9 +137,9 @@ CSRF_TRUSTED_ORIGINS = frontend_urls
 
 # Cross-Domain Cookie Settings (REQUIRED for Netlify -> Render auth)
 SESSION_COOKIE_SAMESITE = 'None'
-SESSION_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SAMESITE = 'None'
-CSRF_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = not DEBUG
 
 # Celery Configuration
 # ... (rest of the file)
