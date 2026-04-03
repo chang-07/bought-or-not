@@ -25,12 +25,6 @@ class AuthResponse(Schema):
     error: str | None = None
 
 
-class PitchCreateSchema(Schema):
-    ticker: str
-    target_price: float
-    content_body: str
-
-
 class PitchResponseSchema(Schema):
     id: int
     ticker: str

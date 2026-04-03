@@ -5,10 +5,9 @@ import uuid
 import time
 import datetime
 import logging
-import traceback as tb_module
 
 from pytz import timezone
-from ninja import Router, File, Form, Form
+from ninja import Router, File, Form
 from ninja.files import UploadedFile
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -29,7 +28,6 @@ from .schemas import (
     LoginSchema,
     CreateUserSchema,
     AuthResponse,
-    PitchCreateSchema,
     PitchResponseSchema,
     ExecuteTradeSchema,
     SellTradeSchema,
@@ -138,9 +136,7 @@ router = Router()
 def login(request, payload: LoginSchema):
     ip = _get_client_ip(request)
     if not _check_rate_limit(ip):
-        return _api_error(
-            "Too many login attempts. Please try again later.", status_code=429
-        )
+        return _api_error("Too many login attempts. Please try again later.", status_code=429)
 
     user = authenticate(request, username=payload.username, password=payload.password)
     if user is not None:
@@ -168,9 +164,7 @@ def logout(request):
 def signup(request, payload: CreateUserSchema):
     ip = _get_client_ip(request)
     if not _check_rate_limit(ip):
-        return _api_error(
-            "Too many signup attempts. Please try again later.", status_code=429
-        )
+        return _api_error("Too many signup attempts. Please try again later.", status_code=429)
 
     if User.objects.filter(username=payload.username).exists():
         return _api_error("Username already exists")
@@ -204,18 +198,13 @@ def snaptrade_connect(request):
     if not profile.snaptrade_secret:
         user_id = str(uuid.uuid4())
         try:
-            response = snaptrade.authentication.register_snap_trade_user(
-                user_id=user_id
-            )
+            response = snaptrade.authentication.register_snap_trade_user(user_id=user_id)
             profile.snaptrade_user_id = response.body["userId"]
             profile.snaptrade_secret = response.body["userSecret"]
             profile.save()
         except Exception as e:
             err_str = str(e)
-            if (
-                "Personal keys can only register one user" in err_str
-                or "1012" in err_str
-            ):
+            if "Personal keys can only register one user" in err_str or "1012" in err_str:
                 try:
                     users_res = snaptrade.authentication.list_snap_trade_users()
                     users_list = getattr(users_res, "body", users_res)
@@ -223,30 +212,20 @@ def snaptrade_connect(request):
                         users_list = [users_list] if users_list else []
 
                     for old_uid in users_list:
-                        uid_str = (
-                            old_uid.get("userId")
-                            if isinstance(old_uid, dict)
-                            else str(old_uid)
-                        )
+                        uid_str = old_uid.get("userId") if isinstance(old_uid, dict) else str(old_uid)
                         if uid_str:
-                            snaptrade.authentication.delete_snap_trade_user(
-                                user_id=uid_str
-                            )
+                            snaptrade.authentication.delete_snap_trade_user(user_id=uid_str)
 
                     time.sleep(1.5)
 
-                    retry_res = snaptrade.authentication.register_snap_trade_user(
-                        user_id=user_id
-                    )
+                    retry_res = snaptrade.authentication.register_snap_trade_user(user_id=user_id)
                     retry_body = getattr(retry_res, "body", retry_res)
                     profile.snaptrade_user_id = retry_body["userId"]
                     profile.snaptrade_secret = retry_body["userSecret"]
                     profile.save()
                 except Exception as inner_e:
                     logger.exception("Failed to reset personal key space")
-                    return _api_error(
-                        "Failed to reset personal key space. Please try again later."
-                    )
+                    return _api_error("Failed to reset personal key space. Please try again later.")
             else:
                 logger.exception("SnapTrade registration error")
                 return _api_error(err_str)
@@ -276,10 +255,7 @@ def search_stocks(request, q: str = ""):
         return {"success": True, "results": []}
 
     try:
-        symbols_raw = (
-            sdk_to_python(snaptrade.reference_data.get_symbols(substring=query).body)
-            or []
-        )
+        symbols_raw = sdk_to_python(snaptrade.reference_data.get_symbols(substring=query).body) or []
 
         results = []
         for s in symbols_raw[:20]:
@@ -318,11 +294,12 @@ def create_pitch(
 ):
     MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
     if deck and deck.size > MAX_UPLOAD_BYTES:
-        return _api_error(
-            f"File too large. Maximum size is 10 MB, got {deck.size / (1024 * 1024):.1f} MB."
-        )
+        return _api_error(f"File too large. Maximum size is 10 MB, got {deck.size / (1024 * 1024):.1f} MB.")
 
-    profile = UserProfile.objects.get(user=request.user)
+    try:
+        profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        return _api_error("User profile not found")
 
     pitch = Pitch.objects.create(
         author=profile,
@@ -339,9 +316,7 @@ def create_pitch(
             file=deck,
             file_name=str(getattr(deck, "name", "") or ""),
             file_size_bytes=int(getattr(deck, "size", 0) or 0),
-            file_type=str(
-                getattr(deck, "content_type", "") or "application/octet-stream"
-            ),
+            file_type=str(getattr(deck, "content_type", "") or "application/octet-stream"),
         )
 
     try:
@@ -367,13 +342,9 @@ def _pitch_to_dict(p, request_user) -> dict:
         "entry_price": _f(p.entry_price) if p.entry_price else None,
         "status": str(p.status),
         "is_verified": bool(p.is_verified),
-        "is_mine": bool(
-            request_user.is_authenticated and p.author.user_id == request_user.id
-        ),
+        "is_mine": bool(request_user.is_authenticated and p.author.user_id == request_user.id),
         "content_body": str(p.content_body),
-        "deck_url": f"/api/pitches/{int(p.id)}/deck"
-        if attachment and attachment.file
-        else None,
+        "deck_url": f"/api/pitches/{int(p.id)}/deck" if attachment and attachment.file else None,
     }
 
 
@@ -395,10 +366,7 @@ def get_pitches(request, search: str = None):
 
     if search:
         pitches = (
-            (
-                pitches.filter(ticker__icontains=search)
-                | pitches.filter(author__user__username__icontains=search)
-            )
+            (pitches.filter(ticker__icontains=search) | pitches.filter(author__user__username__icontains=search))
             .distinct()
             .order_by("-created_at")
         )
@@ -519,9 +487,7 @@ def get_pre_trade_impact(request, pitch_id: int):
         response = {
             "success": True,
             "impact": {
-                "estimated_execution_price": float(estimated_price_raw)
-                if estimated_price_raw is not None
-                else None,
+                "estimated_execution_price": float(estimated_price_raw) if estimated_price_raw is not None else None,
                 "estimated_commissions": float(estimated_commissions_raw),
                 "trade_id": str(trade.get("id") or ""),
             },
@@ -585,9 +551,7 @@ def execute_trade(request, pitch_id: int, payload: ExecuteTradeSchema):
             ).body
         )
 
-        order_id = str(
-            place_raw.get("brokerage_order_id") or place_raw.get("id") or "unknown"
-        )
+        order_id = str(place_raw.get("brokerage_order_id") or place_raw.get("id") or "unknown")
 
         TradeEvent.objects.create(
             reader=profile,
@@ -645,9 +609,7 @@ def sell_trade(request, payload: SellTradeSchema):
             ).body
         )
 
-        order_id = str(
-            place_raw.get("brokerage_order_id") or place_raw.get("id") or "unknown"
-        )
+        order_id = str(place_raw.get("brokerage_order_id") or place_raw.get("id") or "unknown")
         return {"success": True, "order_id": order_id}
 
     except UserProfile.DoesNotExist:
@@ -680,14 +642,19 @@ def get_author_profile(request, username: str):
                 "total_pitches": total_pitches,
             },
             "pitches": [
-                {
-                    "id": int(p.id),
-                    "ticker": str(p.ticker),
-                    "target_price": _f(p.target_price),
-                    "entry_price": _f(p.entry_price) if p.entry_price else None,
-                    "status": str(p.status),
-                    "created_at": p.created_at.isoformat(),
-                }
+                (
+                    lambda a: {
+                        "id": int(p.id),
+                        "ticker": str(p.ticker),
+                        "target_price": _f(p.target_price),
+                        "entry_price": _f(p.entry_price) if p.entry_price else None,
+                        "status": str(p.status),
+                        "is_verified": bool(p.is_verified),
+                        "content_body": str(p.content_body),
+                        "created_at": p.created_at.isoformat(),
+                        "deck_url": f"/api/pitches/{int(p.id)}/deck" if a and a.file else None,
+                    }
+                )(next(iter(p.attachments.all()), None))
                 for p in pitches
             ],
         }
@@ -724,19 +691,19 @@ def get_my_pitches_analytics(request):
             "closed_pitches": closed_pitches,
         },
         "pitches": [
-            {
-                "id": int(p.id),
-                "ticker": str(p.ticker),
-                "target_price": _f(p.target_price),
-                "entry_price": _f(p.entry_price) if p.entry_price else None,
-                "status": str(p.status),
-                "is_verified": bool(p.is_verified),
-                "content_body": str(p.content_body),
-                "created_at": p.created_at.isoformat(),
-                "deck_url": f"/api/pitches/{int(p.id)}/deck"
-                if p.attachments.first() and p.attachments.first().file
-                else None,
-            }
+            (
+                lambda a: {
+                    "id": int(p.id),
+                    "ticker": str(p.ticker),
+                    "target_price": _f(p.target_price),
+                    "entry_price": _f(p.entry_price) if p.entry_price else None,
+                    "status": str(p.status),
+                    "is_verified": bool(p.is_verified),
+                    "content_body": str(p.content_body),
+                    "created_at": p.created_at.isoformat(),
+                    "deck_url": f"/api/pitches/{int(p.id)}/deck" if a and a.file else None,
+                }
+            )(next(iter(p.attachments.all()), None))
             for p in pitches
         ],
     }
@@ -799,13 +766,9 @@ def get_portfolio(request):
                         "units": float(pos.get("units") or 0),
                         "price": float(pos.get("price") or 0),
                         "average_purchase_price": float(
-                            pos.get("average_purchase_price")
-                            or pos.get("average_price")
-                            or 0
+                            pos.get("average_purchase_price") or pos.get("average_price") or 0
                         ),
-                        "open_pnl": float(
-                            pos.get("open_pnl") or pos.get("unrealized_pnl") or 0
-                        ),
+                        "open_pnl": float(pos.get("open_pnl") or pos.get("unrealized_pnl") or 0),
                     }
                 )
 
@@ -880,23 +843,14 @@ def get_portfolio_history(request):
                     ).body
                 )
                 if rates_raw and isinstance(rates_raw, dict):
-                    data_points = (
-                        rates_raw.get("data")
-                        or rates_raw.get("timeWeightedReturn")
-                        or []
-                    )
+                    data_points = rates_raw.get("data") or rates_raw.get("timeWeightedReturn") or []
                     if isinstance(data_points, list):
                         for dp in data_points:
                             all_return_rates.append(
                                 {
-                                    "date": str(
-                                        dp.get("date") or dp.get("period_start") or ""
-                                    ),
+                                    "date": str(dp.get("date") or dp.get("period_start") or ""),
                                     "return_pct": float(
-                                        dp.get("return")
-                                        or dp.get("return_pct")
-                                        or dp.get("value")
-                                        or 0
+                                        dp.get("return") or dp.get("return_pct") or dp.get("value") or 0
                                     ),
                                     "account_id": acc_id,
                                 }
@@ -924,22 +878,12 @@ def get_portfolio_history(request):
                     for act in activities_raw[:50]:
                         all_activities.append(
                             {
-                                "date": str(
-                                    act.get("trade_date")
-                                    or act.get("settlement_date")
-                                    or ""
-                                ),
+                                "date": str(act.get("trade_date") or act.get("settlement_date") or ""),
                                 "type": str(act.get("type") or ""),
                                 "description": str(act.get("description") or ""),
-                                "symbol": str(
-                                    (act.get("symbol") or {}).get("symbol")
-                                    or act.get("ticker")
-                                    or ""
-                                ),
+                                "symbol": str((act.get("symbol") or {}).get("symbol") or act.get("ticker") or ""),
                                 "amount": float(act.get("amount") or 0),
-                                "units": float(
-                                    act.get("units") or act.get("quantity") or 0
-                                ),
+                                "units": float(act.get("units") or act.get("quantity") or 0),
                                 "price": float(act.get("price") or 0),
                                 "account_id": acc_id,
                             }
@@ -948,9 +892,7 @@ def get_portfolio_history(request):
                 logger.warning("Activities unavailable for %s: %s", acc_id, e)
 
         snapshots = PortfolioSnapshot.objects.filter(user=profile).order_by("date")
-        snapshot_data = [
-            {"date": s.date.isoformat(), "value": _f(s.total_value)} for s in snapshots
-        ]
+        snapshot_data = [{"date": s.date.isoformat(), "value": _f(s.total_value)} for s in snapshots]
 
         return {
             "success": True,
