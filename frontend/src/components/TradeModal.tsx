@@ -44,7 +44,7 @@ export default function TradeModal({ isOpen, onClose, pitchId, ticker }: TradeMo
         setError('');
 
         try {
-            const res = await api.get(`/api/trade/impact/${pitchId}`);
+            const res = await api.get(`/api/trade/impact/${pitchId}`, { params: { units } });
 
             if (res.data.success) {
                 setImpactData(res.data.impact);
