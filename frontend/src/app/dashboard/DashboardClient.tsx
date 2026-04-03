@@ -25,7 +25,6 @@ type Pitch = {
   author_username: string;
   target_price: number;
   entry_price: number | null;
-  current_alpha: number;
   status: string;
   content_body: string;
   deck_url: string | null;
@@ -82,18 +81,7 @@ export default function DashboardClient() {
     }
   };
 
-  const [refreshing, setRefreshing] = useState(false);
-  const refreshAlpha = async () => {
-    setRefreshing(true);
-    try {
-      await api.post('/api/alpha/refresh');
-      await fetchPitches(search);
-    } catch (err) {
-      console.error('Failed to refresh alpha', err);
-    } finally {
-      setRefreshing(false);
-    }
-  };
+
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,18 +122,7 @@ export default function DashboardClient() {
           />
         </motion.form>
 
-          <motion.button
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            whileHover={{ scale: 1.1, rotate: 180 }}
-            whileTap={{ scale: 0.9 }}
-            onClick={refreshAlpha}
-            disabled={refreshing}
-            className="p-3 rounded-2xl border border-white/10 hover:border-yellow-400/30 hover:bg-yellow-400/5 transition-all disabled:opacity-50 group bg-[#111114]"
-            title="Refresh alpha scores via Finnhub"
-          >
-            <RefreshCw className={`w-4 h-4 text-gray-500 group-hover:text-yellow-400 transition-colors ${refreshing ? 'animate-spin' : ''}`} />
-          </motion.button>
+
         </header>
 
       <main className="max-w-7xl mx-auto space-y-8 relative z-10 pb-24">
@@ -224,16 +201,6 @@ export default function DashboardClient() {
                           Target Strike: <span className="text-white">${pitch.target_price.toFixed(2)}</span>
                         </div>
                       </div>
-                    </div>
-
-                    <div
-                      className={`flex flex-col items-end px-6 py-3 rounded-2xl bg-black/40 border border-white/5 ${pitch.current_alpha >= 0 ? "text-emerald-400 border-emerald-500/10" : "text-rose-400 border-rose-500/10"}`}
-                    >
-                      <div className="flex items-center gap-1.5 font-black text-2xl italic tracking-tighter">
-                        {pitch.current_alpha >= 0 ? "+" : ""}
-                        {(pitch.current_alpha * 100).toFixed(2)}%
-                      </div>
-                      <span className="text-[9px] font-black uppercase tracking-widest opacity-60">Alpha vs SPY Benchmark</span>
                     </div>
                   </div>
 

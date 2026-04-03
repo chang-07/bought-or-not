@@ -24,7 +24,6 @@ type MyPitch = {
   ticker: string;
   target_price: number;
   entry_price: number | null;
-  current_alpha: number;
   status: string;
   is_verified: boolean;
   content_body: string;
@@ -40,8 +39,6 @@ type MyPitchAnalytics = {
     verified_pitches: number;
     closed_pitches: number;
     win_rate: number;
-    avg_alpha: number;
-    total_alpha: number;
   };
   pitches: MyPitch[];
   error?: string;
@@ -212,20 +209,7 @@ export default function MyPitchesClient({ initialData }: { initialData: MyPitchA
               />
             </section>
 
-            <section className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <StatCard
-                label="Avg Alpha Generation"
-                value={`${(data.author.avg_alpha * 100).toFixed(2)}%`}
-                trend={data.author.avg_alpha >= 0 ? "up" : "down"}
-                icon={<TrendingUp />}
-              />
-              <StatCard
-                label="Cumulative Alpha"
-                value={`${(data.author.total_alpha * 100).toFixed(2)}%`}
-                trend={data.author.total_alpha >= 0 ? "up" : "down"}
-                icon={<BarChart3 />}
-              />
-            </section>
+
 
             <section className="space-y-8">
               <div className="flex items-center gap-4">
@@ -276,22 +260,8 @@ export default function MyPitchesClient({ initialData }: { initialData: MyPitchA
                                 </div>
                               </div>
                             </div>
-
-                            <div
-                              className={`flex items-center gap-3 font-black text-3xl italic tracking-tighter ${
-                                pitch.current_alpha >= 0
-                                  ? "text-emerald-400"
-                                  : "text-rose-400"
-                              }`}
-                            >
-                              {pitch.current_alpha >= 0 ? (
-                                <TrendingUp className="w-8 h-8" />
-                              ) : (
-                                <TrendingDown className="w-8 h-8" />
-                              )}
-                              {(pitch.current_alpha * 100).toFixed(2)}%
-                            </div>
                           </div>
+
 
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-10">
                             <div className="bg-black/40 border border-white/5 rounded-2xl p-6 group-hover:border-yellow-400/10 transition-colors">

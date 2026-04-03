@@ -21,7 +21,6 @@ type Pitch = {
   ticker: string;
   target_price: number;
   entry_price: number | null;
-  current_alpha: number;
   status: string;
   content_body: string;
   deck_url: string | null;
@@ -30,7 +29,6 @@ type Pitch = {
 interface AuthorData {
   total_aum: number;
   win_rate: number;
-  avg_alpha: number;
   total_pitches: number;
 }
 
@@ -106,7 +104,6 @@ export default function AuthorClient({ initialProfile, username }: { initialProf
           {[
             { label: "Assets Under Management", value: `$${authorData.total_aum.toLocaleString()}`, icon: Award, color: "yellow-400" },
             { label: "Win Rate", value: `${authorData.win_rate.toFixed(1)}%`, icon: Target, color: "emerald-400" },
-            { label: "Average Alpha", value: `${(authorData.avg_alpha * 100).toFixed(2)}%`, icon: Activity, color: "yellow-400" },
             { label: "Total Pitches", value: authorData.total_pitches, icon: TrendingUp, color: "gray-200" }
           ].map((stat, i) => (
             <motion.div 
@@ -168,15 +165,7 @@ export default function AuthorClient({ initialProfile, username }: { initialProf
                       </div>
                     </div>
 
-                    <div
-                      className={`flex flex-col items-end px-5 py-2 rounded-xl bg-black/40 border border-white/5 ${pitch.current_alpha >= 0 ? "text-emerald-400 border-emerald-500/10" : "text-rose-400 border-rose-500/10"}`}
-                    >
-                      <div className="flex items-center gap-1.5 font-black text-xl italic tracking-tighter">
-                        {pitch.current_alpha >= 0 ? "+" : ""}
-                        {(pitch.current_alpha * 100).toFixed(2)}%
-                      </div>
-                      <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Alpha Score</span>
-                    </div>
+
                   </div>
 
                   <p className="text-gray-400 text-sm leading-relaxed font-medium mb-8 line-clamp-3">
