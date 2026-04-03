@@ -54,7 +54,7 @@ export default function MyPitchesClient({ initialData }: { initialData: MyPitchA
   const [error, setError] = useState(initialData?.error ? initialData.error : "");
 
   useEffect(() => {
-    if (initialData?.error) {
+    if (!initialData || initialData?.error) {
       const fetchClientData = async () => {
         setLoading(true);
         setError("");

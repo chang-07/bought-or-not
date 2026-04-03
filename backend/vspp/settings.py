@@ -24,7 +24,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'django-insecure-(eeuy_vio)v%#1nz&32@5j3o-+n5mmk0a4&y$+_eq_$ry(sx59')
+# In production, DJANGO_SECRET_KEY must be set. The fallback generates a random
+# key so local dev works without env vars (but sessions won't persist across restarts).
+from django.core.management.utils import get_random_secret_key as _grsk
+SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', _grsk())
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv('DJANGO_DEBUG', 'False') == 'True'

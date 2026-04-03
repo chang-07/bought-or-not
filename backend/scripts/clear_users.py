@@ -5,8 +5,12 @@ sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 from snaptrade_client import SnapTrade
 
-client_id = os.getenv('SNAPTRADE_CLIENT_ID', 'PERS-S97OUB5333YF4CY9UY1Q')
-consumer_key = os.getenv('SNAPTRADE_CONSUMER_KEY', 's5uWDyXQ8yUIkKiHowV5aXZjj4txpqEtnqCxjozWqfeKii2h8h')
+client_id = os.getenv('SNAPTRADE_CLIENT_ID', '')
+consumer_key = os.getenv('SNAPTRADE_CONSUMER_KEY', '')
+
+if not client_id or not consumer_key:
+    print("Error: SNAPTRADE_CLIENT_ID and SNAPTRADE_CONSUMER_KEY env vars are required.")
+    sys.exit(1)
 
 print("Using client_id:", client_id)
 snaptrade = SnapTrade(

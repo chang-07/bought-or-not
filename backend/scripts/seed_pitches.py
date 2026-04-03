@@ -13,14 +13,14 @@ from core.models import UserProfile, Pitch
 def seed_db():
     # 1. Create Mock Authors
     u1, _ = User.objects.get_or_create(username='WarrenBuffett', defaults={'email': 'warren@berkshire.com'})
-    u1.set_password('valueinvesting123')
+    u1.set_unusable_password()
     u1.save()
-    p1, _ = UserProfile.objects.get_or_create(user=u1, defaults={'snaptrade_secret': 'fake_secret'})
+    p1, _ = UserProfile.objects.get_or_create(user=u1)
 
     u2, _ = User.objects.get_or_create(username='CathieWood', defaults={'email': 'cathie@ark.com'})
-    u2.set_password('innovation456')
+    u2.set_unusable_password()
     u2.save()
-    p2, _ = UserProfile.objects.get_or_create(user=u2, defaults={'snaptrade_secret': 'fake_secret'})
+    p2, _ = UserProfile.objects.get_or_create(user=u2)
 
     # 2. Create Verified Dummy Pitches
     # Delete existing to prevent duplication on multiple runs

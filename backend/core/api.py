@@ -7,13 +7,12 @@ from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
 from .models import UserProfile, Pitch, PitchAttachment
 from .tasks import verify_pitch_holdings, update_alpha_scores
+from .clients import snaptrade
 import os
 import uuid
 try:
-    from snaptrade_client import SnapTrade  # type: ignore
     from snaptrade_client.schemas import NoneClass, BoolClass, Unset  # type: ignore
 except ImportError:
-    SnapTrade = type('SnapTrade', (object,), {'__new__': lambda cls, **k: None})
     NoneClass = BoolClass = Unset = type('Missing', (), {})
 
 
@@ -69,11 +68,6 @@ def _f(val, fallback=0.0):
 
 
 router = Router()
-
-snaptrade = SnapTrade(
-    client_id=os.getenv('SNAPTRADE_CLIENT_ID', 'placeholder_client_id'),
-    consumer_key=os.getenv('SNAPTRADE_CONSUMER_KEY', 'placeholder_consumer_key')
-)
 
 
 # ---------------------------------------------------------------------------
@@ -257,6 +251,10 @@ class PitchCreateSchema(Schema):
 
 @router.post("/pitches")
 def create_pitch(request, payload: PitchCreateSchema, deck: UploadedFile = File(None)):
+
+    MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
+    if deck and deck.size > MAX_UPLOAD_BYTES:
+        return {"error": f"File too large. Maximum size is 10 MB, got {deck.size / (1024*1024):.1f} MB."}
 
     profile = UserProfile.objects.get(user=request.user)
 

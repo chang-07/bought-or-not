@@ -150,3 +150,4 @@ __pycache__/
 *.so
 celerybeat-schedule*
 .env
+.venv/
