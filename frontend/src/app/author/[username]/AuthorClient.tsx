@@ -27,8 +27,7 @@ type Pitch = {
 };
 
 interface AuthorData {
-  total_aum: number;
-  win_rate: number;
+  username: string;
   total_pitches: number;
 }
 
@@ -100,11 +99,9 @@ export default function AuthorClient({ initialProfile, username }: { initialProf
           </div>
         </motion.div>
 
-        <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <motion.div variants={itemVariants} className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {[
-            { label: "Assets Under Management", value: `$${authorData.total_aum.toLocaleString()}`, icon: Award, color: "yellow-400" },
-            { label: "Win Rate", value: `${authorData.win_rate.toFixed(1)}%`, icon: Target, color: "emerald-400" },
-            { label: "Total Pitches", value: authorData.total_pitches, icon: TrendingUp, color: "gray-200" }
+            { label: "Total Pitches", value: authorData.total_pitches, icon: TrendingUp, color: "yellow-400" }
           ].map((stat, i) => (
             <motion.div 
               key={i}
