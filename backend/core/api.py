@@ -8,7 +8,7 @@ import logging
 import traceback as tb_module
 
 from pytz import timezone
-from ninja import Router, File
+from ninja import Router, File, Form, Form
 from ninja.files import UploadedFile
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -153,7 +153,7 @@ def login(request, payload: LoginSchema):
             "snaptrade_connected": bool(profile.snaptrade_secret),
             "token": token,
         }
-    return _api_error("Invalid credentials")
+    return {"success": False, "error": "Invalid credentials"}
 
 
 @router.post("/logout")
@@ -309,7 +309,13 @@ def search_stocks(request, q: str = ""):
 
 
 @router.post("/pitches")
-def create_pitch(request, payload: PitchCreateSchema, deck: UploadedFile = File(None)):
+def create_pitch(
+    request,
+    ticker: str = Form(...),
+    target_price: float = Form(...),
+    content_body: str = Form(...),
+    deck: UploadedFile = File(None),
+):
     MAX_UPLOAD_BYTES = 10 * 1024 * 1024  # 10 MB
     if deck and deck.size > MAX_UPLOAD_BYTES:
         return _api_error(
@@ -320,9 +326,9 @@ def create_pitch(request, payload: PitchCreateSchema, deck: UploadedFile = File(
 
     pitch = Pitch.objects.create(
         author=profile,
-        ticker=payload.ticker.upper(),
-        target_price=payload.target_price,
-        content_body=payload.content_body,
+        ticker=ticker.upper(),
+        target_price=target_price,
+        content_body=content_body,
         status="ACTIVE",
         is_verified=False,
     )

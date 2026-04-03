@@ -17,11 +17,12 @@ class CreateUserSchema(Schema):
 
 
 class AuthResponse(Schema):
-    success: bool
+    success: bool = False
     user_id: int | None = None
     username: str | None = None
     snaptrade_connected: bool = False
     token: str | None = None
+    error: str | None = None
 
 
 class PitchCreateSchema(Schema):
