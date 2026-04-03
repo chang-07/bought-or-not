@@ -754,13 +754,6 @@ def get_portfolio(request):
         return _api_error("SnapTrade account not connected")
 
     try:
-        profile = UserProfile.objects.get(user=request.user)
-    except UserProfile.DoesNotExist:
-        return _api_error("User profile not found")
-    if not profile.snaptrade_secret or not profile.snaptrade_user_id:
-        return _api_error("SnapTrade account not connected")
-
-    try:
         accounts_raw = sdk_to_python(
             snaptrade.account_information.list_user_accounts(
                 user_id=str(profile.snaptrade_user_id),
