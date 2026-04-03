@@ -93,10 +93,11 @@ def seed_db():
         )
         pitches.append(pitch)
 
-    try:
-        pitch1, pitch2, pitch3, pitch4, pitch5, pitch6 = pitches
-    except ValueError:
-        pass
+    if len(pitches) < 6:
+        print(f"Warning: Expected 6 pitches but created {len(pitches)}. Aborting attachment step.")
+        return
+
+    pitch1, pitch2, pitch3, pitch4, pitch5, pitch6 = pitches
 
     from core.models import PitchAttachment
     from django.core.files import File
